@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useAdminJobs, useUpdateJobStatus } from "@/hooks/useAdminJobs";
+import { useAdminJobs, useUpdateJobStatus, useBulkUpdateJobs, useArchiveJob, useDuplicateJob, exportJobsToCSV } from "@/hooks/useAdminJobs";
 import type { AdminJobFull, JobStatus } from "@/types/jobs";
 import { statusColors } from "@/types/jobs";
 import { Button } from "@/components/ui/button";
@@ -31,14 +31,17 @@ import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
+  DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink, Copy, Archive, Download } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
-import { JobFormDialog } from "@/components/admin/jobs/JobFormDialog";
+import { JobEditorTabs } from "@/components/admin/jobs/JobEditorTabs";
 import { DeleteJobDialog } from "@/components/admin/jobs/DeleteJobDialog";
 import { JobStatusSelect } from "@/components/admin/jobs/JobStatusSelect";
 import { Input } from "@/components/ui/input";
@@ -333,11 +336,14 @@ export default function AdminJobsPage() {
       </div>
 
       {/* Dialogs */}
-      <JobFormDialog
-        open={formOpen}
-        onOpenChange={setFormOpen}
-        job={selectedJob}
-      />
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0">
+          <JobEditorTabs
+            jobId={selectedJob?.id}
+            onClose={() => setFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
       <DeleteJobDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
