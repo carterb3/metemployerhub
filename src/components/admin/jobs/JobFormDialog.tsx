@@ -31,9 +31,9 @@ import {
 } from "@/components/ui/select";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
-import { Constants } from "@/integrations/supabase/types";
-import { useCreateJob, useUpdateJob, useEmployers, AdminJob } from "@/hooks/useAdminJobs";
+import { useCreateJob, useUpdateJob, useEmployers } from "@/hooks/useAdminJobs";
 import { regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
+import type { AdminJobFull } from "@/types/jobs";
 
 const jobFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -65,7 +65,7 @@ const listingTypeLabels: Record<string, string> = {
 interface JobFormDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  job?: AdminJob | null;
+  job?: AdminJobFull | null;
 }
 
 export function JobFormDialog({ open, onOpenChange, job }: JobFormDialogProps) {
