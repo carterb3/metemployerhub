@@ -348,10 +348,7 @@ export default function JobsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-between pt-3 border-t border-border">
-                          <span className="font-medium text-foreground">
-                            {job.pay_range || "Salary not specified"}
-                          </span>
+                        <div className="flex items-center justify-end pt-3 border-t border-border">
                           <span className="text-sm font-medium text-primary flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
                             View Details
                             <ArrowRight className="ml-1 h-3.5 w-3.5" />
