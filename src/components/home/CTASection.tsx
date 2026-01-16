@@ -1,10 +1,8 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Building2, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
-
 export function CTASection() {
-  return (
-    <section className="section-padding bg-primary">
+  return <section className="section-padding bg-primary">
       <div className="container-mobile">
         <div className="grid gap-8 lg:grid-cols-2">
           {/* Job Seekers CTA */}
@@ -15,11 +13,7 @@ export function CTASection() {
             <h3 className="font-serif text-2xl font-bold text-primary-foreground mb-4">
               Ready to Find Your Next Role?
             </h3>
-            <p className="text-primary-foreground/80 mb-6">
-              Register with MET today and get connected with a career advisor
-              who can help you find opportunities that match your skills and
-              goals.
-            </p>
+            <p className="text-primary-foreground/80 mb-6">Connect with MET today and access the assistance that can help you find opportunities that match your skills and goals.</p>
             <Button variant="hero" size="lg" asChild>
               <Link to="/register">
                 Register Now
@@ -33,9 +27,7 @@ export function CTASection() {
             <div className="w-12 h-12 rounded-xl bg-primary-foreground/10 flex items-center justify-center mb-6">
               <Building2 className="h-6 w-6 text-primary-foreground" />
             </div>
-            <h3 className="font-serif text-2xl font-bold text-primary-foreground mb-4">
-              Looking to Hire Métis Talent?
-            </h3>
+            <h3 className="font-serif text-2xl font-bold text-primary-foreground mb-4">Looking to Hire Red River Métis Talent?</h3>
             <p className="text-primary-foreground/80 mb-6">
               Post your job openings and connect with qualified candidates. Our
               team can help match you with the right people for your
@@ -50,6 +42,5 @@ export function CTASection() {
           </div>
         </div>
       </div>
-    </section>
-  );
+    </section>;
 }
