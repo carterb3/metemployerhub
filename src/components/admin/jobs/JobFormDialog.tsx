@@ -33,6 +33,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Loader2 } from "lucide-react";
 import { useCreateJob, useUpdateJob, useEmployers } from "@/hooks/useAdminJobs";
 import { regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
+import { Constants } from "@/integrations/supabase/types";
 import type { AdminJobFull } from "@/types/jobs";
 
 const jobFormSchema = z.object({
