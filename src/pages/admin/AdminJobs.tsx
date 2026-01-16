@@ -1,8 +1,6 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useJobs } from "@/hooks/useJobs";
-import { supabase } from "@/integrations/supabase/client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useAdminJobs, useUpdateJobStatus, AdminJob } from "@/hooks/useAdminJobs";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -28,50 +26,81 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { Search, Plus, Loader2, Eye, EyeOff } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { JobFormDialog } from "@/components/admin/jobs/JobFormDialog";
+import { DeleteJobDialog } from "@/components/admin/jobs/DeleteJobDialog";
+import { JobStatusSelect } from "@/components/admin/jobs/JobStatusSelect";
+import {
+  regionLabels,
+  categoryLabels,
+  employmentTypeLabels,
+} from "@/hooks/useJobs";
 
 type JobStatus = Database["public"]["Enums"]["job_status"];
 type Region = Database["public"]["Enums"]["manitoba_region"];
+type Category = Database["public"]["Enums"]["job_category"];
 
 const statusColors: Record<JobStatus, string> = {
   draft: "bg-muted text-muted-foreground border-border",
   pending: "bg-warning/10 text-warning border-warning/20",
   active: "bg-success/10 text-success border-success/20",
   expired: "bg-muted text-muted-foreground border-border",
-  closed: "bg-muted text-muted-foreground border-border",
+  closed: "bg-destructive/10 text-destructive border-destructive/20",
 };
 
 export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
-  const queryClient = useQueryClient();
+  const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
 
-  const { data: jobs = [], isLoading } = useJobs({
+  // Dialog state
+  const [formOpen, setFormOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState<AdminJob | null>(null);
+
+  const { data: jobs = [], isLoading, error } = useAdminJobs({
+    status: statusFilter === "all" ? undefined : statusFilter,
     region: regionFilter === "all" ? undefined : regionFilter,
+    category: categoryFilter === "all" ? undefined : categoryFilter,
     search: search || undefined,
   });
 
-  const toggleStatus = useMutation({
-    mutationFn: async ({ id, status }: { id: string; status: JobStatus }) => {
-      const { error } = await supabase
-        .from("jobs")
-        .update({ status })
-        .eq("id", id);
-      if (error) throw error;
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ["jobs"] });
-    },
-  });
+  const updateStatus = useUpdateJobStatus();
+
+  const handleEdit = (job: AdminJob) => {
+    setSelectedJob(job);
+    setFormOpen(true);
+  };
+
+  const handleDelete = (job: AdminJob) => {
+    setSelectedJob(job);
+    setDeleteOpen(true);
+  };
+
+  const handleCreate = () => {
+    setSelectedJob(null);
+    setFormOpen(true);
+  };
+
+  const handleStatusChange = (job: AdminJob, status: JobStatus) => {
+    updateStatus.mutate({ id: job.id, status });
+  };
 
   return (
     <AdminLayout>
       <div className="space-y-6">
+        {/* Header */}
         <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div>
             <h1 className="font-serif text-3xl font-bold text-foreground">
@@ -81,17 +110,16 @@ export default function AdminJobsPage() {
               Manage job postings for the public job board
             </p>
           </div>
-          <Button asChild>
-            <Link to="/admin/jobs/new">
-              <Plus className="h-4 w-4 mr-2" />
-              Add Job
-            </Link>
+          <Button onClick={handleCreate}>
+            <Plus className="h-4 w-4 mr-2" />
+            New Job Posting
           </Button>
         </div>
 
+        {/* Filters */}
         <Card>
-          <CardHeader>
-            <CardTitle>Filters</CardTitle>
+          <CardHeader className="pb-3">
+            <CardTitle className="text-lg">Filters</CardTitle>
             <CardDescription>Filter and search job listings</CardDescription>
           </CardHeader>
           <CardContent>
@@ -99,7 +127,7 @@ export default function AdminJobsPage() {
               <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                 <Input
-                  placeholder="Search jobs..."
+                  placeholder="Search by title or company..."
                   value={search}
                   onChange={(e) => setSearch(e.target.value)}
                   className="pl-9"
@@ -119,7 +147,7 @@ export default function AdminJobsPage() {
                   <SelectItem value="all">All Statuses</SelectItem>
                   {Constants.public.Enums.job_status.map((status) => (
                     <SelectItem key={status} value={status}>
-                      {status}
+                      {status.charAt(0).toUpperCase() + status.slice(1)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -138,7 +166,26 @@ export default function AdminJobsPage() {
                   <SelectItem value="all">All Regions</SelectItem>
                   {Constants.public.Enums.manitoba_region.map((region) => (
                     <SelectItem key={region} value={region}>
-                      {region}
+                      {regionLabels[region] || region}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+
+              <Select
+                value={categoryFilter}
+                onValueChange={(value) =>
+                  setCategoryFilter(value as Category | "all")
+                }
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Filter by category" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Categories</SelectItem>
+                  {Constants.public.Enums.job_category.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {categoryLabels[cat] || cat}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -147,6 +194,18 @@ export default function AdminJobsPage() {
           </CardContent>
         </Card>
 
+        {/* Error State */}
+        {error && (
+          <Card className="border-destructive">
+            <CardContent className="pt-6">
+              <p className="text-destructive text-center">
+                Error loading jobs: {error.message}
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Jobs Table */}
         <Card>
           <CardContent className="p-0">
             {isLoading ? (
@@ -154,88 +213,143 @@ export default function AdminJobsPage() {
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
               </div>
             ) : jobs.length === 0 ? (
-              <div className="text-center py-12 text-muted-foreground">
-                No jobs found matching your criteria
+              <div className="text-center py-12">
+                <p className="text-muted-foreground mb-4">
+                  No jobs found matching your criteria
+                </p>
+                <Button variant="outline" onClick={handleCreate}>
+                  <Plus className="h-4 w-4 mr-2" />
+                  Create your first job posting
+                </Button>
               </div>
             ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Title</TableHead>
-                    <TableHead>Region</TableHead>
-                    <TableHead>Type</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Posted</TableHead>
-                    <TableHead className="w-[120px]">Actions</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {jobs.map((job) => (
-                    <TableRow key={job.id}>
-                      <TableCell>
-                        <div>
-                          <p className="font-medium">{job.title}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {job.city || job.region}
-                          </p>
-                        </div>
-                      </TableCell>
-                      <TableCell>{job.region}</TableCell>
-                      <TableCell>
-                        <Badge variant="outline">
-                          {job.employment_type.replace("_", " ")}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>
-                        <Badge
-                          variant="outline"
-                          className={statusColors[job.status]}
-                        >
-                          {job.status}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-muted-foreground">
-                        {job.posted_at
-                          ? format(new Date(job.posted_at), "MMM d, yyyy")
-                          : "Not posted"}
-                      </TableCell>
-                      <TableCell>
-                        <div className="flex items-center gap-2">
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            onClick={() =>
-                              toggleStatus.mutate({
-                                id: job.id,
-                                status:
-                                  job.status === "active" ? "pending" : "active",
-                              })
-                            }
-                            title={
-                              job.status === "active"
-                                ? "Unpublish"
-                                : "Publish"
-                            }
-                          >
-                            {job.status === "active" ? (
-                              <EyeOff className="h-4 w-4" />
-                            ) : (
-                              <Eye className="h-4 w-4" />
-                            )}
-                          </Button>
-                          <Button variant="ghost" size="sm" asChild>
-                            <Link to={`/jobs/${job.id}`}>View</Link>
-                          </Button>
-                        </div>
-                      </TableCell>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow>
+                      <TableHead className="min-w-[200px]">Title</TableHead>
+                      <TableHead>Company</TableHead>
+                      <TableHead>Region</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead>Type</TableHead>
+                      <TableHead>Status</TableHead>
+                      <TableHead>Posted</TableHead>
+                      <TableHead>Expires</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
+                  </TableHeader>
+                  <TableBody>
+                    {jobs.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{job.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {job.city || regionLabels[job.region] || job.region}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {job.employers?.company_name ? (
+                            <span className="text-sm">
+                              {job.employers.company_name}
+                            </span>
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {regionLabels[job.region] || job.region}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {categoryLabels[job.category] || job.category}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">
+                            {employmentTypeLabels[job.employment_type] ||
+                              job.employment_type.replace("_", " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <JobStatusSelect
+                            status={job.status}
+                            onStatusChange={(status) =>
+                              handleStatusChange(job, status)
+                            }
+                            disabled={updateStatus.isPending}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {job.posted_at
+                            ? format(new Date(job.posted_at), "MMM d, yyyy")
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {job.expires_at
+                            ? format(new Date(job.expires_at), "MMM d, yyyy")
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(job)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/jobs/${job.id}`} target="_blank">
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  View Public
+                                </Link>
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
+                                onClick={() => handleDelete(job)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash2 className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
             )}
           </CardContent>
         </Card>
+
+        {/* Summary */}
+        {!isLoading && jobs.length > 0 && (
+          <p className="text-sm text-muted-foreground text-center">
+            Showing {jobs.length} job{jobs.length !== 1 ? "s" : ""}
+          </p>
+        )}
       </div>
+
+      {/* Dialogs */}
+      <JobFormDialog
+        open={formOpen}
+        onOpenChange={setFormOpen}
+        job={selectedJob}
+      />
+      <DeleteJobDialog
+        open={deleteOpen}
+        onOpenChange={setDeleteOpen}
+        job={selectedJob}
+      />
     </AdminLayout>
   );
 }
