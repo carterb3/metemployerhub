@@ -28,12 +28,13 @@ import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type IntakeStatus = Database["public"]["Enums"]["intake_status"];
-type Region = Database["public"]["Enums"]["region"];
+type Region = Database["public"]["Enums"]["manitoba_region"];
 
 const statusColors: Record<IntakeStatus, string> = {
   new: "bg-primary/10 text-primary border-primary/20",
   contacted: "bg-blue-100 text-blue-700 border-blue-200",
-  in_progress: "bg-warning/10 text-warning border-warning/20",
+  engaged: "bg-warning/10 text-warning border-warning/20",
+  referred: "bg-amber-100 text-amber-700 border-amber-200",
   placed: "bg-success/10 text-success border-success/20",
   closed: "bg-muted text-muted-foreground border-border",
 };
@@ -160,7 +161,7 @@ export default function IntakesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {Constants.intake_status.map((status) => (
+                  {Constants.public.Enums.intake_status.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status.replace("_", " ")}
                     </SelectItem>
@@ -179,7 +180,7 @@ export default function IntakesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Regions</SelectItem>
-                  {Constants.region.map((region) => (
+                  {Constants.public.Enums.manitoba_region.map((region) => (
                     <SelectItem key={region} value={region}>
                       {region}
                     </SelectItem>
@@ -250,7 +251,7 @@ export default function IntakesPage() {
                             </Badge>
                           </SelectTrigger>
                           <SelectContent>
-                            {Constants.intake_status.map((status) => (
+                            {Constants.public.Enums.intake_status.map((status) => (
                               <SelectItem key={status} value={status}>
                                 {status.replace("_", " ")}
                               </SelectItem>

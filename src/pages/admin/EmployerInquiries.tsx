@@ -44,13 +44,13 @@ import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type InquiryStatus = Database["public"]["Enums"]["inquiry_status"];
-type Region = Database["public"]["Enums"]["region"];
+type Region = Database["public"]["Enums"]["manitoba_region"];
 type EmployerInquiry = Database["public"]["Tables"]["employer_inquiries"]["Row"];
 
 const statusColors: Record<InquiryStatus, string> = {
   new: "bg-primary/10 text-primary border-primary/20",
-  contacted: "bg-blue-100 text-blue-700 border-blue-200",
   in_progress: "bg-warning/10 text-warning border-warning/20",
+  resolved: "bg-success/10 text-success border-success/20",
   closed: "bg-muted text-muted-foreground border-border",
 };
 
@@ -161,7 +161,7 @@ export default function EmployerInquiriesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {Constants.inquiry_status.map((status) => (
+                  {Constants.public.Enums.inquiry_status.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status.replace("_", " ")}
                     </SelectItem>
@@ -180,7 +180,7 @@ export default function EmployerInquiriesPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Regions</SelectItem>
-                  {Constants.region.map((region) => (
+                  {Constants.public.Enums.manitoba_region.map((region) => (
                     <SelectItem key={region} value={region}>
                       {region}
                     </SelectItem>
@@ -265,7 +265,7 @@ export default function EmployerInquiriesPage() {
                             </Badge>
                           </SelectTrigger>
                           <SelectContent>
-                            {Constants.inquiry_status.map((status) => (
+                            {Constants.public.Enums.inquiry_status.map((status) => (
                               <SelectItem key={status} value={status}>
                                 {status.replace("_", " ")}
                               </SelectItem>

@@ -36,7 +36,8 @@ type IntakeStatus = Database["public"]["Enums"]["intake_status"];
 const statusColors: Record<IntakeStatus, string> = {
   new: "bg-primary/10 text-primary border-primary/20",
   contacted: "bg-blue-100 text-blue-700 border-blue-200",
-  in_progress: "bg-warning/10 text-warning border-warning/20",
+  engaged: "bg-warning/10 text-warning border-warning/20",
+  referred: "bg-amber-100 text-amber-700 border-amber-200",
   placed: "bg-success/10 text-success border-success/20",
   closed: "bg-muted text-muted-foreground border-border",
 };
@@ -347,7 +348,7 @@ export default function IntakeDetailPage() {
                       </Badge>
                     </SelectTrigger>
                     <SelectContent>
-                      {Constants.intake_status.map((status) => (
+                      {Constants.public.Enums.intake_status.map((status) => (
                         <SelectItem key={status} value={status}>
                           {status.replace("_", " ")}
                         </SelectItem>

@@ -35,13 +35,14 @@ import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 
 type JobStatus = Database["public"]["Enums"]["job_status"];
-type Region = Database["public"]["Enums"]["region"];
+type Region = Database["public"]["Enums"]["manitoba_region"];
 
 const statusColors: Record<JobStatus, string> = {
+  draft: "bg-muted text-muted-foreground border-border",
   pending: "bg-warning/10 text-warning border-warning/20",
   active: "bg-success/10 text-success border-success/20",
-  filled: "bg-primary/10 text-primary border-primary/20",
   expired: "bg-muted text-muted-foreground border-border",
+  closed: "bg-muted text-muted-foreground border-border",
 };
 
 export default function AdminJobsPage() {
@@ -51,7 +52,6 @@ export default function AdminJobsPage() {
   const queryClient = useQueryClient();
 
   const { data: jobs = [], isLoading } = useJobs({
-    status: statusFilter === "all" ? undefined : statusFilter,
     region: regionFilter === "all" ? undefined : regionFilter,
     search: search || undefined,
   });
@@ -117,7 +117,7 @@ export default function AdminJobsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Statuses</SelectItem>
-                  {Constants.job_status.map((status) => (
+                  {Constants.public.Enums.job_status.map((status) => (
                     <SelectItem key={status} value={status}>
                       {status}
                     </SelectItem>
@@ -136,7 +136,7 @@ export default function AdminJobsPage() {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="all">All Regions</SelectItem>
-                  {Constants.region.map((region) => (
+                  {Constants.public.Enums.manitoba_region.map((region) => (
                     <SelectItem key={region} value={region}>
                       {region}
                     </SelectItem>

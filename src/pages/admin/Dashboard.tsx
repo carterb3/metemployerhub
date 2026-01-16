@@ -10,7 +10,7 @@ export default function AdminDashboard() {
   const { data: inquiries = [] } = useEmployerInquiries();
 
   const newIntakes = intakes.filter((i) => i.status === "new").length;
-  const inProgressIntakes = intakes.filter((i) => i.status === "in_progress").length;
+  const inProgressIntakes = intakes.filter((i) => i.status === "contacted" || i.status === "engaged").length;
   const urgentIntakes = intakes.filter((i) => i.is_urgent).length;
 
   const newInquiries = inquiries.filter((i) => i.status === "new").length;
@@ -115,7 +115,7 @@ export default function AdminDashboard() {
                       className={`px-2 py-1 text-xs font-medium rounded-full ${
                         intake.status === "new"
                           ? "bg-primary/10 text-primary"
-                          : intake.status === "in_progress"
+                          : intake.status === "contacted" || intake.status === "engaged"
                           ? "bg-warning/10 text-warning"
                           : "bg-muted text-muted-foreground"
                       }`}

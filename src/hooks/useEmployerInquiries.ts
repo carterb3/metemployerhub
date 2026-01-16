@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type InquiryStatus = Database["public"]["Enums"]["inquiry_status"];
-type Region = Database["public"]["Enums"]["region"];
+type Region = Database["public"]["Enums"]["manitoba_region"];
 type EmployerInquiry = Database["public"]["Tables"]["employer_inquiries"]["Row"];
 
 interface InquiryFilters {
