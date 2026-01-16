@@ -1,14 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { Menu, X, ChevronDown } from "lucide-react";
+import { Menu, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { cn } from "@/lib/utils";
+import logo from "@/assets/logo.png";
 
 const navigation = [
   { name: "Find a Job", href: "/jobs" },
@@ -28,18 +23,12 @@ export function Header() {
     <header className="sticky top-0 z-50 w-full border-b border-border bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/80">
       <nav className="container-mobile flex h-16 items-center justify-between lg:h-20">
         {/* Logo */}
-        <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-lg bg-primary">
-            <span className="text-xl font-bold text-primary-foreground">∞</span>
-          </div>
-          <div className="hidden sm:block">
-            <p className="font-serif text-lg font-semibold text-foreground">
-              MET Recruitment
-            </p>
-            <p className="text-xs text-muted-foreground">
-              Métis Employment & Training
-            </p>
-          </div>
+        <Link to="/" className="flex items-center">
+          <img 
+            src={logo} 
+            alt="Métis Employment & Training" 
+            className="h-12 lg:h-14 w-auto"
+          />
         </Link>
 
         {/* Desktop Navigation */}
