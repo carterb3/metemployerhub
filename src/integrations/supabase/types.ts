@@ -293,6 +293,7 @@ export type Database = {
           expires_at: string | null
           id: string
           is_remote: boolean | null
+          listing_type: Database["public"]["Enums"]["listing_type"]
           pay_range: string | null
           posted_at: string | null
           region: Database["public"]["Enums"]["manitoba_region"]
@@ -313,6 +314,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_remote?: boolean | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           pay_range?: string | null
           posted_at?: string | null
           region: Database["public"]["Enums"]["manitoba_region"]
@@ -333,6 +335,7 @@ export type Database = {
           expires_at?: string | null
           id?: string
           is_remote?: boolean | null
+          listing_type?: Database["public"]["Enums"]["listing_type"]
           pay_range?: string | null
           posted_at?: string | null
           region?: Database["public"]["Enums"]["manitoba_region"]
@@ -452,6 +455,11 @@ export type Database = {
         | "transportation"
         | "other"
       job_status: "draft" | "pending" | "active" | "expired" | "closed"
+      listing_type:
+        | "summer_employment"
+        | "met_positions"
+        | "partner_jobs"
+        | "training_programs"
       manitoba_region:
         | "winnipeg"
         | "southeast"
@@ -627,6 +635,12 @@ export const Constants = {
         "other",
       ],
       job_status: ["draft", "pending", "active", "expired", "closed"],
+      listing_type: [
+        "summer_employment",
+        "met_positions",
+        "partner_jobs",
+        "training_programs",
+      ],
       manitoba_region: [
         "winnipeg",
         "southeast",
