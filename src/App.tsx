@@ -11,6 +11,12 @@ import Employers from "./pages/Employers";
 import Programs from "./pages/Programs";
 import Regions from "./pages/Regions";
 import NotFound from "./pages/NotFound";
+import Login from "./pages/Login";
+import AdminDashboard from "./pages/admin/Dashboard";
+import AdminIntakes from "./pages/admin/Intakes";
+import IntakeDetail from "./pages/admin/IntakeDetail";
+import AdminEmployerInquiries from "./pages/admin/EmployerInquiries";
+import AdminJobs from "./pages/admin/AdminJobs";
 
 const queryClient = new QueryClient();
 
@@ -21,6 +27,7 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <Routes>
+          {/* Public routes */}
           <Route path="/" element={<Index />} />
           <Route path="/jobs" element={<Jobs />} />
           <Route path="/jobs/:id" element={<JobDetail />} />
@@ -28,6 +35,15 @@ const App = () => (
           <Route path="/employers" element={<Employers />} />
           <Route path="/programs" element={<Programs />} />
           <Route path="/regions" element={<Regions />} />
+          <Route path="/login" element={<Login />} />
+          
+          {/* Admin routes - protected by AdminLayout */}
+          <Route path="/admin" element={<AdminDashboard />} />
+          <Route path="/admin/intakes" element={<AdminIntakes />} />
+          <Route path="/admin/intakes/:id" element={<IntakeDetail />} />
+          <Route path="/admin/employers" element={<AdminEmployerInquiries />} />
+          <Route path="/admin/jobs" element={<AdminJobs />} />
+          
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
