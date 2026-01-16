@@ -348,8 +348,8 @@ export default function JobsPage() {
                           </span>
                         </div>
 
-                        <div className="flex items-center justify-end pt-3 border-t border-border">
-                          <span className="text-sm font-medium text-primary flex items-center opacity-0 group-hover:opacity-100 transition-opacity">
+                        <div className="flex items-center justify-start pt-3">
+                          <span className="text-sm font-medium text-primary hover:text-[#b12028] flex items-center transition-colors">
                             View Details
                             <ArrowRight className="ml-1 h-3.5 w-3.5" />
                           </span>
