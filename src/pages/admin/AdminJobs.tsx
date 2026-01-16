@@ -1,8 +1,9 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useAdminJobs, useUpdateJobStatus, AdminJob } from "@/hooks/useAdminJobs";
+import { useAdminJobs, useUpdateJobStatus } from "@/hooks/useAdminJobs";
+import type { AdminJobFull, JobStatus } from "@/types/jobs";
+import { statusColors } from "@/types/jobs";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import {
   Select,
   SelectContent,
@@ -40,23 +41,15 @@ import type { Database } from "@/integrations/supabase/types";
 import { JobFormDialog } from "@/components/admin/jobs/JobFormDialog";
 import { DeleteJobDialog } from "@/components/admin/jobs/DeleteJobDialog";
 import { JobStatusSelect } from "@/components/admin/jobs/JobStatusSelect";
+import { Input } from "@/components/ui/input";
 import {
   regionLabels,
   categoryLabels,
   employmentTypeLabels,
 } from "@/hooks/useJobs";
 
-type JobStatus = Database["public"]["Enums"]["job_status"];
 type Region = Database["public"]["Enums"]["manitoba_region"];
 type Category = Database["public"]["Enums"]["job_category"];
-
-const statusColors: Record<JobStatus, string> = {
-  draft: "bg-muted text-muted-foreground border-border",
-  pending: "bg-warning/10 text-warning border-warning/20",
-  active: "bg-success/10 text-success border-success/20",
-  expired: "bg-muted text-muted-foreground border-border",
-  closed: "bg-destructive/10 text-destructive border-destructive/20",
-};
 
 export default function AdminJobsPage() {
   const [search, setSearch] = useState("");
@@ -67,7 +60,7 @@ export default function AdminJobsPage() {
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
-  const [selectedJob, setSelectedJob] = useState<AdminJob | null>(null);
+  const [selectedJob, setSelectedJob] = useState<AdminJobFull | null>(null);
 
   const { data: jobs = [], isLoading, error } = useAdminJobs({
     status: statusFilter === "all" ? undefined : statusFilter,
@@ -78,12 +71,12 @@ export default function AdminJobsPage() {
 
   const updateStatus = useUpdateJobStatus();
 
-  const handleEdit = (job: AdminJob) => {
+  const handleEdit = (job: AdminJobFull) => {
     setSelectedJob(job);
     setFormOpen(true);
   };
 
-  const handleDelete = (job: AdminJob) => {
+  const handleDelete = (job: AdminJobFull) => {
     setSelectedJob(job);
     setDeleteOpen(true);
   };
@@ -93,7 +86,7 @@ export default function AdminJobsPage() {
     setFormOpen(true);
   };
 
-  const handleStatusChange = (job: AdminJob, status: JobStatus) => {
+  const handleStatusChange = (job: AdminJobFull, status: JobStatus) => {
     updateStatus.mutate({ id: job.id, status });
   };
 

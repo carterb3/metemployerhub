@@ -9,12 +9,13 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Loader2 } from "lucide-react";
-import { useDeleteJob, AdminJob } from "@/hooks/useAdminJobs";
+import { useDeleteJob } from "@/hooks/useAdminJobs";
+import type { AdminJobFull } from "@/types/jobs";
 
 interface DeleteJobDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  job: AdminJob | null;
+  job: AdminJobFull | null;
 }
 
 export function DeleteJobDialog({ open, onOpenChange, job }: DeleteJobDialogProps) {

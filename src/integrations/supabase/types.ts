@@ -187,6 +187,91 @@ export type Database = {
           },
         ]
       }
+      job_activity_log: {
+        Row: {
+          action: Database["public"]["Enums"]["job_action"]
+          actor_user_id: string | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string
+          id: string
+          job_id: string
+          metadata: Json | null
+        }
+        Insert: {
+          action: Database["public"]["Enums"]["job_action"]
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          job_id: string
+          metadata?: Json | null
+        }
+        Update: {
+          action?: Database["public"]["Enums"]["job_action"]
+          actor_user_id?: string | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string
+          id?: string
+          job_id?: string
+          metadata?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_activity_log_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      job_attachments: {
+        Row: {
+          created_at: string
+          file_name: string
+          file_path: string
+          file_size: number | null
+          file_type: string | null
+          id: string
+          is_public: boolean
+          job_id: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string
+          file_name: string
+          file_path: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_public?: boolean
+          job_id: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string
+          file_name?: string
+          file_path?: string
+          file_size?: number | null
+          file_type?: string | null
+          id?: string
+          is_public?: boolean
+          job_id?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_attachments_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_seeker_intakes: {
         Row: {
           assigned_at: string | null
@@ -280,69 +365,177 @@ export type Database = {
         }
         Relationships: []
       }
+      job_tags: {
+        Row: {
+          job_id: string
+          tag_id: string
+        }
+        Insert: {
+          job_id: string
+          tag_id: string
+        }
+        Update: {
+          job_id?: string
+          tag_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_tags_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_tags_tag_id_fkey"
+            columns: ["tag_id"]
+            isOneToOne: false
+            referencedRelation: "tags"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       jobs: {
         Row: {
+          address: string | null
+          application_method: Database["public"]["Enums"]["application_method"]
+          apply_email: string | null
+          apply_instructions: string | null
+          apply_phone: string | null
           apply_through_met: boolean | null
           apply_url: string | null
+          archived_at: string | null
+          archived_by: string | null
           category: Database["public"]["Enums"]["job_category"]
           city: string | null
           created_at: string
+          created_by: string | null
           description: string
           employer_id: string | null
           employment_type: Database["public"]["Enums"]["employment_type"]
           expires_at: string | null
+          external_id: string | null
+          featured: boolean
           id: string
           is_remote: boolean | null
           listing_type: Database["public"]["Enums"]["listing_type"]
+          location_type: Database["public"]["Enums"]["location_type"]
+          pay_currency: string
+          pay_max: number | null
+          pay_min: number | null
+          pay_period: Database["public"]["Enums"]["pay_period"] | null
           pay_range: string | null
+          pay_visible: boolean
+          postal_code: string | null
           posted_at: string | null
+          priority: number
+          province: string
+          published_at: string | null
+          published_by: string | null
           region: Database["public"]["Enums"]["manitoba_region"]
           requirements: string | null
+          scheduled_publish_at: string | null
+          scheduled_unpublish_at: string | null
+          slug: string | null
+          source: Database["public"]["Enums"]["job_source"]
           status: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
+          address?: string | null
+          application_method?: Database["public"]["Enums"]["application_method"]
+          apply_email?: string | null
+          apply_instructions?: string | null
+          apply_phone?: string | null
           apply_through_met?: boolean | null
           apply_url?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           category: Database["public"]["Enums"]["job_category"]
           city?: string | null
           created_at?: string
+          created_by?: string | null
           description: string
           employer_id?: string | null
           employment_type: Database["public"]["Enums"]["employment_type"]
           expires_at?: string | null
+          external_id?: string | null
+          featured?: boolean
           id?: string
           is_remote?: boolean | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          location_type?: Database["public"]["Enums"]["location_type"]
+          pay_currency?: string
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_period?: Database["public"]["Enums"]["pay_period"] | null
           pay_range?: string | null
+          pay_visible?: boolean
+          postal_code?: string | null
           posted_at?: string | null
+          priority?: number
+          province?: string
+          published_at?: string | null
+          published_by?: string | null
           region: Database["public"]["Enums"]["manitoba_region"]
           requirements?: string | null
+          scheduled_publish_at?: string | null
+          scheduled_unpublish_at?: string | null
+          slug?: string | null
+          source?: Database["public"]["Enums"]["job_source"]
           status?: Database["public"]["Enums"]["job_status"]
           title: string
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
+          address?: string | null
+          application_method?: Database["public"]["Enums"]["application_method"]
+          apply_email?: string | null
+          apply_instructions?: string | null
+          apply_phone?: string | null
           apply_through_met?: boolean | null
           apply_url?: string | null
+          archived_at?: string | null
+          archived_by?: string | null
           category?: Database["public"]["Enums"]["job_category"]
           city?: string | null
           created_at?: string
+          created_by?: string | null
           description?: string
           employer_id?: string | null
           employment_type?: Database["public"]["Enums"]["employment_type"]
           expires_at?: string | null
+          external_id?: string | null
+          featured?: boolean
           id?: string
           is_remote?: boolean | null
           listing_type?: Database["public"]["Enums"]["listing_type"]
+          location_type?: Database["public"]["Enums"]["location_type"]
+          pay_currency?: string
+          pay_max?: number | null
+          pay_min?: number | null
+          pay_period?: Database["public"]["Enums"]["pay_period"] | null
           pay_range?: string | null
+          pay_visible?: boolean
+          postal_code?: string | null
           posted_at?: string | null
+          priority?: number
+          province?: string
+          published_at?: string | null
+          published_by?: string | null
           region?: Database["public"]["Enums"]["manitoba_region"]
           requirements?: string | null
+          scheduled_publish_at?: string | null
+          scheduled_unpublish_at?: string | null
+          slug?: string | null
+          source?: Database["public"]["Enums"]["job_source"]
           status?: Database["public"]["Enums"]["job_status"]
           title?: string
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
@@ -384,6 +577,24 @@ export type Database = {
         }
         Relationships: []
       }
+      tags: {
+        Row: {
+          created_at: string
+          id: string
+          name: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          name: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          name?: string
+        }
+        Relationships: []
+      }
       user_roles: {
         Row: {
           created_at: string
@@ -421,6 +632,12 @@ export type Database = {
     }
     Enums: {
       app_role: "admin" | "staff" | "user"
+      application_method:
+        | "apply_url"
+        | "apply_through_met"
+        | "email"
+        | "phone"
+        | "in_person"
       contact_preference: "email" | "phone" | "text" | "any"
       employment_type:
         | "full_time"
@@ -442,6 +659,15 @@ export type Database = {
         | "referred"
         | "placed"
         | "closed"
+      job_action:
+        | "create"
+        | "update"
+        | "status_change"
+        | "publish"
+        | "unpublish"
+        | "duplicate"
+        | "archive"
+        | "restore"
       job_category:
         | "administration"
         | "construction_trades"
@@ -454,12 +680,14 @@ export type Database = {
         | "retail_sales"
         | "transportation"
         | "other"
+      job_source: "manual" | "imported"
       job_status: "draft" | "pending" | "active" | "expired" | "closed"
       listing_type:
         | "summer_employment"
         | "met_positions"
         | "partner_jobs"
         | "training_programs"
+      location_type: "onsite" | "hybrid" | "remote"
       manitoba_region:
         | "winnipeg"
         | "southeast"
@@ -469,6 +697,7 @@ export type Database = {
         | "the_pas"
         | "thompson"
         | "swan_river"
+      pay_period: "hour" | "day" | "week" | "month" | "year" | "project"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -597,6 +826,13 @@ export const Constants = {
   public: {
     Enums: {
       app_role: ["admin", "staff", "user"],
+      application_method: [
+        "apply_url",
+        "apply_through_met",
+        "email",
+        "phone",
+        "in_person",
+      ],
       contact_preference: ["email", "phone", "text", "any"],
       employment_type: [
         "full_time",
@@ -621,6 +857,16 @@ export const Constants = {
         "placed",
         "closed",
       ],
+      job_action: [
+        "create",
+        "update",
+        "status_change",
+        "publish",
+        "unpublish",
+        "duplicate",
+        "archive",
+        "restore",
+      ],
       job_category: [
         "administration",
         "construction_trades",
@@ -634,6 +880,7 @@ export const Constants = {
         "transportation",
         "other",
       ],
+      job_source: ["manual", "imported"],
       job_status: ["draft", "pending", "active", "expired", "closed"],
       listing_type: [
         "summer_employment",
@@ -641,6 +888,7 @@ export const Constants = {
         "partner_jobs",
         "training_programs",
       ],
+      location_type: ["onsite", "hybrid", "remote"],
       manitoba_region: [
         "winnipeg",
         "southeast",
@@ -651,6 +899,7 @@ export const Constants = {
         "thompson",
         "swan_river",
       ],
+      pay_period: ["hour", "day", "week", "month", "year", "project"],
     },
   },
 } as const
