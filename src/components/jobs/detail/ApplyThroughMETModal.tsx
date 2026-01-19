@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -32,7 +32,15 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Sparkles, CheckCircle2, Loader2, ArrowRight } from "lucide-react";
+import { 
+  Sparkles, 
+  CheckCircle2, 
+  Loader2, 
+  ArrowRight, 
+  Upload, 
+  FileText, 
+  X 
+} from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
 
 type ManitobaRegion = Database["public"]["Enums"]["manitoba_region"];
@@ -55,6 +63,15 @@ const contactPreferenceOptions: { value: ContactPreference; label: string }[] = 
   { value: "text", label: "Text Message" },
   { value: "any", label: "Any Method" },
 ];
+
+// Allowed file types for resume
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 // Form validation schema
 const applyFormSchema = z.object({
@@ -108,6 +125,10 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
   const [open, setOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
+  const [resumeFile, setResumeFile] = useState<File | null>(null);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const form = useForm<ApplyFormData>({
     resolver: zodResolver(applyFormSchema),
@@ -124,10 +145,97 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
     },
   });
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setResumeError(null);
+    
+    if (!file) {
+      setResumeFile(null);
+      return;
+    }
+
+    // Validate file type
+    const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!ALLOWED_EXTENSIONS.includes(extension) && !ALLOWED_FILE_TYPES.includes(file.type)) {
+      setResumeError("Please upload a PDF or Word document (.pdf, .doc, .docx)");
+      setResumeFile(null);
+      return;
+    }
+
+    // Validate file size
+    if (file.size > MAX_FILE_SIZE) {
+      setResumeError("File size must be less than 10MB");
+      setResumeFile(null);
+      return;
+    }
+
+    setResumeFile(file);
+  };
+
+  const removeFile = () => {
+    setResumeFile(null);
+    setResumeError(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
+  const uploadResume = async (file: File, email: string): Promise<{ url: string; filename: string } | null> => {
+    setIsUploading(true);
+    
+    try {
+      // Create a unique filename with timestamp and sanitized original name
+      const timestamp = Date.now();
+      const sanitizedName = file.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+      const filePath = `applications/${timestamp}-${sanitizedName}`;
+      
+      const { data, error } = await supabase.storage
+        .from('resumes')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (error) {
+        console.error("Resume upload error:", error);
+        throw error;
+      }
+
+      // Get the file URL (private bucket, so this is just the path)
+      return {
+        url: data.path,
+        filename: file.name,
+      };
+    } catch (error) {
+      console.error("Failed to upload resume:", error);
+      toast.error("Failed to upload resume. Please try again.");
+      return null;
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const onSubmit = async (data: ApplyFormData) => {
     setIsSubmitting(true);
 
     try {
+      let resumeData: { url: string; filename: string } | null = null;
+      
+      // Upload resume if provided
+      if (resumeFile) {
+        resumeData = await uploadResume(resumeFile, data.email);
+        if (!resumeData) {
+          setIsSubmitting(false);
+          return; // Upload failed, error already shown
+        }
+      }
+
       const { error } = await supabase
         .from("job_seeker_intakes")
         .insert({
@@ -142,8 +250,10 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
           self_identifies_metis: data.self_identifies_metis || false,
           consent_data_collection: data.consent_data_collection,
           consent_contact: data.consent_contact,
-          interests: [jobId], // Store job ID in interests for tracking
+          interests: [jobId],
           status: "new",
+          resume_url: resumeData?.url || null,
+          resume_filename: resumeData?.filename || null,
         });
 
       if (error) throw error;
@@ -155,6 +265,7 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
       setTimeout(() => {
         setOpen(false);
         setIsSuccess(false);
+        setResumeFile(null);
         form.reset();
       }, 2000);
     } catch (error) {
@@ -166,10 +277,12 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
   };
 
   const handleOpenChange = (newOpen: boolean) => {
-    if (!isSubmitting) {
+    if (!isSubmitting && !isUploading) {
       setOpen(newOpen);
       if (!newOpen) {
         setIsSuccess(false);
+        setResumeFile(null);
+        setResumeError(null);
         form.reset();
       }
     }
@@ -325,6 +438,68 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
                   )}
                 />
 
+                {/* Resume Upload */}
+                <div className="space-y-2">
+                  <FormLabel>Resume</FormLabel>
+                  
+                  {!resumeFile ? (
+                    <div 
+                      className={`
+                        border-2 border-dashed rounded-lg p-4 text-center cursor-pointer
+                        transition-colors hover:border-primary/50 hover:bg-muted/50
+                        ${resumeError ? 'border-destructive' : 'border-border'}
+                      `}
+                      onClick={() => fileInputRef.current?.click()}
+                    >
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                        onChange={handleFileSelect}
+                        className="hidden"
+                      />
+                      <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                      <p className="text-sm font-medium text-foreground">
+                        Upload your resume
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        PDF or Word document, max 10MB
+                      </p>
+                    </div>
+                  ) : (
+                    <div className="flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                      <div className="p-2 bg-primary/10 rounded-lg">
+                        <FileText className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">
+                          {resumeFile.name}
+                        </p>
+                        <p className="text-xs text-muted-foreground">
+                          {formatFileSize(resumeFile.size)}
+                        </p>
+                      </div>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                        onClick={removeFile}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  )}
+                  
+                  {resumeError && (
+                    <p className="text-sm text-destructive">{resumeError}</p>
+                  )}
+                  
+                  <FormDescription>
+                    Optional - Attach your resume to strengthen your application.
+                  </FormDescription>
+                </div>
+
                 {/* Message */}
                 <FormField
                   control={form.control}
@@ -430,12 +605,12 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
                   type="submit" 
                   className="w-full mt-6" 
                   size="lg"
-                  disabled={isSubmitting}
+                  disabled={isSubmitting || isUploading}
                 >
-                  {isSubmitting ? (
+                  {isSubmitting || isUploading ? (
                     <>
                       <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                      Submitting...
+                      {isUploading ? "Uploading resume..." : "Submitting..."}
                     </>
                   ) : (
                     <>
