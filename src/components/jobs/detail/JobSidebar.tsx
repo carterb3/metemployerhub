@@ -15,6 +15,7 @@ import { Separator } from "@/components/ui/separator";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useJobs, type Job, regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
 import { JobEmployerCard } from "./JobEmployerCard";
+import { ApplyThroughMETModal } from "./ApplyThroughMETModal";
 import { toast } from "sonner";
 
 interface JobSidebarProps {
@@ -60,12 +61,16 @@ export function JobSidebar({ job }: JobSidebarProps) {
             </a>
           </Button>
         ) : (
-          <Button asChild className="w-full bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70">
-            <Link to="/register">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Apply Through MET
-            </Link>
-          </Button>
+          <ApplyThroughMETModal 
+            jobTitle={job.title} 
+            jobId={job.id}
+            trigger={
+              <Button className="w-full bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 shadow-lg shadow-accent/20">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Apply Through MET
+              </Button>
+            }
+          />
         )}
 
         <Separator className="my-4" />

@@ -9,6 +9,7 @@ import {
   Sparkles
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { ApplyThroughMETModal } from "./ApplyThroughMETModal";
 import type { Job } from "@/hooks/useJobs";
 
 interface JobApplicationInstructionsProps {
@@ -60,13 +61,17 @@ export function JobApplicationInstructions({ job }: JobApplicationInstructionsPr
       case 'apply_through_met':
       default:
         return (
-          <Button asChild size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70">
-            <Link to="/register">
-              <Sparkles className="mr-2 h-4 w-4" />
-              Apply Through MET
-              <ArrowRight className="ml-2 h-4 w-4" />
-            </Link>
-          </Button>
+          <ApplyThroughMETModal 
+            jobTitle={job.title} 
+            jobId={job.id}
+            trigger={
+              <Button size="lg" className="w-full sm:w-auto bg-gradient-to-r from-accent to-accent/80 hover:from-accent/90 hover:to-accent/70 shadow-lg shadow-accent/25 transition-all duration-300 hover:shadow-xl hover:shadow-accent/30 hover:-translate-y-0.5">
+                <Sparkles className="mr-2 h-4 w-4" />
+                Apply Through MET
+                <ArrowRight className="ml-2 h-4 w-4" />
+              </Button>
+            }
+          />
         );
     }
   };
@@ -140,11 +145,15 @@ export function JobApplicationInstructions({ job }: JobApplicationInstructionsPr
         {renderApplyButton()}
         
         {!job.apply_through_met && (
-          <Button asChild variant="outline" size="lg" className="w-full sm:w-auto">
-            <Link to="/register">
-              Or Apply Through MET
-            </Link>
-          </Button>
+          <ApplyThroughMETModal 
+            jobTitle={job.title} 
+            jobId={job.id}
+            trigger={
+              <Button variant="outline" size="lg" className="w-full sm:w-auto">
+                Or Apply Through MET
+              </Button>
+            }
+          />
         )}
       </div>
 
