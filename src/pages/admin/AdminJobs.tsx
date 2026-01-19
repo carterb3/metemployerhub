@@ -78,6 +78,7 @@ export default function AdminJobsPage() {
 
   const updateStatus = useUpdateJobStatus();
   const bulkUpdate = useBulkUpdateJobs();
+  const duplicateJob = useDuplicateJob();
 
   // Selection helpers
   const allSelected = useMemo(
@@ -414,12 +415,20 @@ export default function AdminJobsPage() {
                                 <Pencil className="h-4 w-4 mr-2" />
                                 Edit
                               </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => duplicateJob.mutate(job.id)}
+                                disabled={duplicateJob.isPending}
+                              >
+                                <Copy className="h-4 w-4 mr-2" />
+                                Duplicate
+                              </DropdownMenuItem>
                               <DropdownMenuItem asChild>
                                 <Link to={`/jobs/${job.id}`} target="_blank">
                                   <ExternalLink className="h-4 w-4 mr-2" />
                                   View Public
                                 </Link>
                               </DropdownMenuItem>
+                              <DropdownMenuSeparator />
                               <DropdownMenuItem
                                 onClick={() => handleDelete(job)}
                                 className="text-destructive focus:text-destructive"
