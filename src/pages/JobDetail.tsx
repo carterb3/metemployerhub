@@ -181,10 +181,18 @@ export default function JobDetailPage() {
                   <h2 className="font-serif text-xl font-semibold text-foreground mb-4">
                     Requirements
                   </h2>
-                  <div className="prose prose-slate max-w-none">
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {job.requirements}
-                    </p>
+                  <div className="prose prose-slate dark:prose-invert max-w-none">
+                    {isHtmlContent(job.requirements) ? (
+                      <div
+                        dangerouslySetInnerHTML={{
+                          __html: sanitizeHtml(job.requirements),
+                        }}
+                      />
+                    ) : (
+                      <p className="text-muted-foreground whitespace-pre-wrap">
+                        {job.requirements}
+                      </p>
+                    )}
                   </div>
                 </div>
               )}

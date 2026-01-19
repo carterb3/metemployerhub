@@ -195,12 +195,16 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Requirements</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <RichTextEditor
+                    value={field.value || ""}
+                    onChange={field.onChange}
                     placeholder="List the qualifications, skills, and experience required..."
-                    className="min-h-[120px]"
-                    {...field}
+                    minHeight="150px"
                   />
                 </FormControl>
+                <FormDescription>
+                  Use bullet points and formatting to list qualifications and skills.
+                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}
