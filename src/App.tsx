@@ -17,6 +17,7 @@ import AdminIntakes from "./pages/admin/Intakes";
 import IntakeDetail from "./pages/admin/IntakeDetail";
 import AdminEmployerInquiries from "./pages/admin/EmployerInquiries";
 import AdminJobs from "./pages/admin/AdminJobs";
+import AdminJobEdit from "./pages/admin/AdminJobEdit";
 
 const queryClient = new QueryClient();
 
@@ -36,14 +37,16 @@ const App = () => (
           <Route path="/programs" element={<Programs />} />
           <Route path="/regions" element={<Regions />} />
           <Route path="/login" element={<Login />} />
-          
+
           {/* Admin routes - protected by AdminLayout */}
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/intakes" element={<AdminIntakes />} />
           <Route path="/admin/intakes/:id" element={<IntakeDetail />} />
           <Route path="/admin/employers" element={<AdminEmployerInquiries />} />
           <Route path="/admin/jobs" element={<AdminJobs />} />
-          
+          <Route path="/admin/jobs/new" element={<AdminJobEdit />} />
+          <Route path="/admin/jobs/:id/edit" element={<AdminJobEdit />} />
+
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
