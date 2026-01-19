@@ -66,7 +66,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   const [activeTab, setActiveTab] = useState("details");
   const [showActivityLog, setShowActivityLog] = useState(false);
 
-  const { data: job, isLoading: jobLoading } = useAdminJob(jobId || null);
+  const { data: job, isLoading: jobLoading, error: jobError } = useAdminJob(jobId || null);
   const { data: employers = [] } = useEmployers();
   const { data: tags = [] } = useTags();
   const createTag = useCreateTag();
@@ -112,40 +112,46 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
 
   // Load job data into form
   useEffect(() => {
-    if (job) {
-      form.reset({
-        title: job.title,
-        description: job.description,
-        requirements: job.requirements || "",
-        region: job.region,
-        city: job.city || "",
-        category: job.category,
-        employment_type: job.employment_type,
-        listing_type: job.listing_type,
-        location_type: job.location_type || "onsite",
-        is_remote: job.is_remote || false,
-        province: job.province || "MB",
-        address: job.address || "",
-        postal_code: job.postal_code || "",
-        employer_id: job.employer_id || "",
-        application_method: job.application_method || "apply_url",
-        apply_url: job.apply_url || "",
-        apply_email: job.apply_email || "",
-        apply_phone: job.apply_phone || "",
-        apply_instructions: job.apply_instructions || "",
-        pay_min: job.pay_min?.toString() || "",
-        pay_max: job.pay_max?.toString() || "",
-        pay_period: job.pay_period || "",
-        pay_visible: job.pay_visible || false,
-        featured: job.featured || false,
-        priority: job.priority || 0,
-        expires_at: job.expires_at ? job.expires_at.split("T")[0] : "",
-        scheduled_publish_at: job.scheduled_publish_at ? job.scheduled_publish_at.slice(0, 16) : "",
-        scheduled_unpublish_at: job.scheduled_unpublish_at ? job.scheduled_unpublish_at.slice(0, 16) : "",
-        status: job.status,
-        tags: job.tags?.map(t => t.id) || [],
-      });
-    }
+    if (!job) return;
+
+    const safeTagIds = Array.isArray((job as any).tags)
+      ? ((job as any).tags
+          .map((t: any) => (typeof t === "string" ? t : t?.id))
+          .filter(Boolean) as string[])
+      : [];
+
+    form.reset({
+      title: job.title,
+      description: job.description,
+      requirements: job.requirements || "",
+      region: job.region,
+      city: job.city || "",
+      category: job.category,
+      employment_type: job.employment_type,
+      listing_type: job.listing_type,
+      location_type: job.location_type || "onsite",
+      is_remote: job.is_remote || false,
+      province: job.province || "MB",
+      address: job.address || "",
+      postal_code: job.postal_code || "",
+      employer_id: job.employer_id || "",
+      application_method: job.application_method || "apply_url",
+      apply_url: job.apply_url || "",
+      apply_email: job.apply_email || "",
+      apply_phone: job.apply_phone || "",
+      apply_instructions: job.apply_instructions || "",
+      pay_min: job.pay_min?.toString() || "",
+      pay_max: job.pay_max?.toString() || "",
+      pay_period: job.pay_period || "",
+      pay_visible: job.pay_visible || false,
+      featured: job.featured || false,
+      priority: job.priority || 0,
+      expires_at: job.expires_at ? job.expires_at.split("T")[0] : "",
+      scheduled_publish_at: job.scheduled_publish_at ? job.scheduled_publish_at.slice(0, 16) : "",
+      scheduled_unpublish_at: job.scheduled_unpublish_at ? job.scheduled_unpublish_at.slice(0, 16) : "",
+      status: job.status,
+      tags: safeTagIds,
+    });
   }, [job, form]);
 
   const prepareSubmitData = (values: JobFormValues) => {
@@ -219,6 +225,18 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   };
 
   const isLoading = createJob.isPending || updateJob.isPending || duplicateJob.isPending;
+
+  if (jobError && isEditing) {
+    return (
+      <div className="flex flex-col items-center justify-center gap-3 py-12 text-center">
+        <p className="text-sm text-destructive">Unable to load this job for editing.</p>
+        <p className="text-xs text-muted-foreground">{(jobError as any)?.message || "Please try again."}</p>
+        <Button type="button" variant="outline" onClick={onClose}>
+          Back to jobs
+        </Button>
+      </div>
+    );
+  }
 
   if (jobLoading && isEditing) {
     return (
