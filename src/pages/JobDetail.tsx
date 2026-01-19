@@ -12,6 +12,7 @@ import {
   ExternalLink,
   CheckCircle2
 } from "lucide-react";
+import DOMPurify from "dompurify";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,6 +25,15 @@ import {
   isJobNew, 
   formatPostedDate 
 } from "@/hooks/useJobs";
+
+// Configure DOMPurify to allow safe HTML tags
+const sanitizeHtml = (html: string) => {
+  return DOMPurify.sanitize(html, {
+    ALLOWED_TAGS: ['p', 'br', 'strong', 'b', 'em', 'i', 'u', 'h2', 'h3', 'ul', 'ol', 'li', 'a'],
+    ALLOWED_ATTR: ['href', 'target', 'rel', 'class'],
+    ADD_ATTR: ['target'], // Allow target attribute for links
+  });
+};
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -159,11 +169,15 @@ export default function JobDetailPage() {
                 <h2 className="font-serif text-xl font-semibold text-foreground mb-4">
                   About This Role
                 </h2>
-                <div className="prose prose-slate max-w-none">
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {job.description}
-                  </p>
-                </div>
+                <div 
+                  className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground 
+                    prose-headings:text-foreground prose-headings:font-semibold
+                    prose-h2:text-lg prose-h2:mt-4 prose-h2:mb-2
+                    prose-h3:text-base prose-h3:mt-3 prose-h3:mb-1
+                    prose-p:my-2 prose-ul:my-2 prose-ol:my-2
+                    prose-li:my-0.5 prose-a:text-primary"
+                  dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.description) }}
+                />
               </div>
 
               {/* Requirements */}
@@ -172,11 +186,15 @@ export default function JobDetailPage() {
                   <h2 className="font-serif text-xl font-semibold text-foreground mb-4">
                     Requirements
                   </h2>
-                  <div className="prose prose-slate max-w-none">
-                    <p className="text-muted-foreground whitespace-pre-wrap">
-                      {job.requirements}
-                    </p>
-                  </div>
+                  <div 
+                    className="prose prose-slate dark:prose-invert max-w-none text-muted-foreground
+                      prose-headings:text-foreground prose-headings:font-semibold
+                      prose-h2:text-lg prose-h2:mt-4 prose-h2:mb-2
+                      prose-h3:text-base prose-h3:mt-3 prose-h3:mb-1
+                      prose-p:my-2 prose-ul:my-2 prose-ol:my-2
+                      prose-li:my-0.5 prose-a:text-primary"
+                    dangerouslySetInnerHTML={{ __html: sanitizeHtml(job.requirements) }}
+                  />
                 </div>
               )}
 
