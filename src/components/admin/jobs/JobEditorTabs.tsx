@@ -225,8 +225,8 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
 
   return (
     <Form {...form}>
-      <div className="flex h-full">
-        <div className={`flex-1 ${showActivityLog ? "pr-80" : ""}`}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full">
+        <div className={`flex-1 flex flex-col ${showActivityLog ? "pr-80" : ""}`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div>
@@ -278,9 +278,8 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
                 Save Draft
               </Button>
               <Button
-                type="button"
+                type="submit"
                 size="sm"
-                onClick={form.handleSubmit(onSubmit)}
                 disabled={isLoading}
               >
                 {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
@@ -290,7 +289,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
           </div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0">
             <div className="border-b px-6">
               <TabsList className="h-12 bg-transparent">
                 <TabsTrigger value="details" className="data-[state=active]:bg-background">
@@ -320,7 +319,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
               </TabsList>
             </div>
 
-            <ScrollArea className="h-[calc(100vh-220px)]">
+            <ScrollArea className="flex-1">
               <div className="p-6">
                 <TabsContent value="details" className="mt-0">
                   <DetailsTab form={form} employers={employers} />
@@ -360,7 +359,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
         {showActivityLog && isEditing && jobId && (
           <ActivityLogPanel jobId={jobId} onClose={() => setShowActivityLog(false)} />
         )}
-      </div>
+      </form>
     </Form>
   );
 }
