@@ -8,7 +8,6 @@ import {
   FormMessage,
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Select,
@@ -20,6 +19,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Constants } from "@/integrations/supabase/types";
 import { categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const listingTypeLabels: Record<string, string> = {
   summer_employment: "Summer Employment",
@@ -175,14 +175,15 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Description *</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <RichTextEditor
+                    value={field.value || ""}
+                    onChange={field.onChange}
                     placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
-                    className="min-h-[180px]"
-                    {...field}
+                    minHeight="180px"
                   />
                 </FormControl>
                 <FormDescription>
-                  Use clear, engaging language. You can use line breaks for formatting.
+                  Use formatting to make job details easy to scan.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -196,10 +197,11 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Requirements</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <RichTextEditor
+                    value={field.value || ""}
+                    onChange={field.onChange}
                     placeholder="List the qualifications, skills, and experience required..."
-                    className="min-h-[120px]"
-                    {...field}
+                    minHeight="120px"
                   />
                 </FormControl>
                 <FormMessage />
