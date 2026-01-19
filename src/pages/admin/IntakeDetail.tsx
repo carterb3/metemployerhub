@@ -23,13 +23,13 @@ import {
   MapPin,
   Calendar,
   AlertTriangle,
-  FileText,
   Send,
   Loader2,
 } from "lucide-react";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { ResumePreviewCard } from "@/components/admin/intakes/ResumePreviewCard";
 
 type IntakeStatus = Database["public"]["Enums"]["intake_status"];
 
@@ -244,20 +244,6 @@ export default function IntakeDetailPage() {
                     </p>
                   </div>
                 )}
-
-                {intake.resume_url && (
-                  <div className="flex items-center gap-2">
-                    <FileText className="h-4 w-4 text-muted-foreground" />
-                    <a
-                      href={intake.resume_url}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-primary hover:underline"
-                    >
-                      {intake.resume_filename || "View Resume"}
-                    </a>
-                  </div>
-                )}
               </CardContent>
             </Card>
 
@@ -321,6 +307,12 @@ export default function IntakeDetailPage() {
 
           {/* Sidebar */}
           <div className="space-y-6">
+            {/* Resume Card */}
+            <ResumePreviewCard 
+              resumeUrl={intake.resume_url} 
+              resumeFilename={intake.resume_filename} 
+            />
+
             <Card>
               <CardHeader>
                 <CardTitle>Status</CardTitle>
