@@ -18,6 +18,7 @@ import { ApplicationTab } from "./tabs/ApplicationTab";
 import { TagsAttachmentsTab } from "./tabs/TagsAttachmentsTab";
 import { PreviewTab } from "./tabs/PreviewTab";
 import { ActivityLogPanel } from "./ActivityLogPanel";
+import { sanitizeHtml } from "@/lib/sanitize";
 
 const jobFormSchema = z.object({
   title: z.string().min(1, "Title is required"),
@@ -148,9 +149,12 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   }, [job, form]);
 
   const prepareSubmitData = (values: JobFormValues) => {
+    // Sanitize HTML content before saving to database
+    const sanitizedDescription = sanitizeHtml(values.description);
+    
     return {
-      title: values.title,
-      description: values.description,
+      title: values.title.trim(),
+      description: sanitizedDescription,
       requirements: values.requirements || null,
       region: values.region as any,
       city: values.city || null,

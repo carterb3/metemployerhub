@@ -20,6 +20,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Constants } from "@/integrations/supabase/types";
 import { categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
+import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const listingTypeLabels: Record<string, string> = {
   summer_employment: "Summer Employment",
@@ -172,14 +173,15 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Description *</FormLabel>
                 <FormControl>
-                  <Textarea
+                  <RichTextEditor
+                    value={field.value}
+                    onChange={field.onChange}
                     placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
-                    className="min-h-[180px]"
-                    {...field}
+                    minHeight="200px"
                   />
                 </FormControl>
                 <FormDescription>
-                  Use clear, engaging language. You can use line breaks for formatting.
+                  Use headings, lists, and formatting to make the description easy to read.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
