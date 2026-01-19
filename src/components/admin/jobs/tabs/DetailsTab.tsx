@@ -20,7 +20,6 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Constants } from "@/integrations/supabase/types";
 import { categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
-import { RichTextEditor } from "@/components/ui/rich-text-editor";
 
 const listingTypeLabels: Record<string, string> = {
   summer_employment: "Summer Employment",
@@ -173,15 +172,14 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Description *</FormLabel>
                 <FormControl>
-                  <RichTextEditor
-                    value={field.value}
-                    onChange={field.onChange}
+                  <Textarea
                     placeholder="Describe the role, responsibilities, and what makes this opportunity great..."
-                    minHeight="200px"
+                    className="min-h-[180px]"
+                    {...field}
                   />
                 </FormControl>
                 <FormDescription>
-                  Use headings, lists, and formatting to make the description easy to read.
+                  Use clear, engaging language. You can use line breaks for formatting.
                 </FormDescription>
                 <FormMessage />
               </FormItem>
@@ -195,16 +193,12 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
               <FormItem>
                 <FormLabel>Requirements</FormLabel>
                 <FormControl>
-                  <RichTextEditor
-                    value={field.value || ""}
-                    onChange={field.onChange}
+                  <Textarea
                     placeholder="List the qualifications, skills, and experience required..."
-                    minHeight="150px"
+                    className="min-h-[120px]"
+                    {...field}
                   />
                 </FormControl>
-                <FormDescription>
-                  Use bullet points and formatting to list qualifications and skills.
-                </FormDescription>
                 <FormMessage />
               </FormItem>
             )}

@@ -6,7 +6,6 @@ import { MapPin, Building2, Clock, DollarSign, Globe, Mail, Phone, User } from "
 import { regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
 import { locationTypeLabels, applicationMethodLabels, payPeriodLabels } from "@/types/jobs";
 import type { Tag } from "@/types/jobs";
-import { sanitizeHtml, isHtmlContent } from "@/lib/sanitize";
 
 interface PreviewTabProps {
   form: UseFormReturn<any>;
@@ -105,17 +104,9 @@ export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
           {/* Description */}
           <div className="space-y-3">
             <h3 className="font-semibold text-lg">About This Role</h3>
-            <div className="prose prose-sm max-w-none dark:prose-invert">
+            <div className="prose prose-sm max-w-none">
               {values.description ? (
-                isHtmlContent(values.description) ? (
-                  <div
-                    dangerouslySetInnerHTML={{
-                      __html: sanitizeHtml(values.description),
-                    }}
-                  />
-                ) : (
-                  <p className="whitespace-pre-wrap">{values.description}</p>
-                )
+                <p className="whitespace-pre-wrap">{values.description}</p>
               ) : (
                 <p className="text-muted-foreground italic">No description provided</p>
               )}
@@ -129,15 +120,7 @@ export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">Requirements</h3>
                 <div className="prose prose-sm max-w-none">
-                  {isHtmlContent(values.requirements) ? (
-                    <div
-                      dangerouslySetInnerHTML={{
-                        __html: sanitizeHtml(values.requirements),
-                      }}
-                    />
-                  ) : (
-                    <p className="whitespace-pre-wrap">{values.requirements}</p>
-                  )}
+                  <p className="whitespace-pre-wrap">{values.requirements}</p>
                 </div>
               </div>
             </>

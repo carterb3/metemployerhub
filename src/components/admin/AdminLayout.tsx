@@ -40,16 +40,8 @@ export function AdminLayout({ children }: AdminLayoutProps) {
     );
   }
 
-  // Avoid a blank screen while redirecting unauthenticated/unauthorized users.
   if (!user || !isStaff) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-background">
-        <div className="flex items-center gap-3 text-muted-foreground">
-          <Loader2 className="h-5 w-5 animate-spin" />
-          <span className="text-sm">Redirecting…</span>
-        </div>
-      </div>
-    );
+    return null;
   }
 
   return (

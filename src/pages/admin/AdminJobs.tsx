@@ -1,7 +1,8 @@
 import { useState } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
-import { useAdminJobs, useUpdateJobStatus } from "@/hooks/useAdminJobs";
+import { useAdminJobs, useUpdateJobStatus, useBulkUpdateJobs, useArchiveJob, useDuplicateJob, exportJobsToCSV } from "@/hooks/useAdminJobs";
 import type { AdminJobFull, JobStatus } from "@/types/jobs";
+import { statusColors } from "@/types/jobs";
 import { Button } from "@/components/ui/button";
 import {
   Select,
@@ -27,15 +28,20 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import {
-  Tooltip,
-  TooltipContent,
-  TooltipTrigger,
-} from "@/components/ui/tooltip";
-import { Search, Plus, Loader2, Pencil } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { Dialog, DialogContent } from "@/components/ui/dialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink, Copy, Archive, Download } from "lucide-react";
+import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { JobEditorTabs } from "@/components/admin/jobs/JobEditorTabs";
 import { DeleteJobDialog } from "@/components/admin/jobs/DeleteJobDialog";
 import { JobStatusSelect } from "@/components/admin/jobs/JobStatusSelect";
 import { Input } from "@/components/ui/input";
@@ -48,26 +54,14 @@ import {
 type Region = Database["public"]["Enums"]["manitoba_region"];
 type Category = Database["public"]["Enums"]["job_category"];
 
-function isJobEditable(status: JobStatus) {
-  // Business rule for UI: expired/closed are non-editable.
-  return status !== "expired" && status !== "closed";
-}
-
-function getEditDisabledReason(status: JobStatus) {
-  if (status === "expired") return "Cannot edit expired jobs";
-  if (status === "closed") return "Cannot edit closed jobs";
-  return "";
-}
-
 export default function AdminJobsPage() {
-  const navigate = useNavigate();
-
   const [search, setSearch] = useState("");
   const [statusFilter, setStatusFilter] = useState<JobStatus | "all">("all");
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
 
-  // Dialog state (delete only; editing is handled via a dedicated route)
+  // Dialog state
+  const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [selectedJob, setSelectedJob] = useState<AdminJobFull | null>(null);
 
@@ -80,17 +74,19 @@ export default function AdminJobsPage() {
 
   const updateStatus = useUpdateJobStatus();
 
+  const handleEdit = (job: AdminJobFull) => {
+    setSelectedJob(job);
+    setFormOpen(true);
+  };
+
   const handleDelete = (job: AdminJobFull) => {
     setSelectedJob(job);
     setDeleteOpen(true);
   };
 
   const handleCreate = () => {
-    navigate("/admin/jobs/new");
-  };
-
-  const handleEdit = (job: AdminJobFull) => {
-    navigate(`/admin/jobs/${job.id}/edit`);
+    setSelectedJob(null);
+    setFormOpen(true);
   };
 
   const handleStatusChange = (job: AdminJobFull, status: JobStatus) => {
@@ -235,117 +231,95 @@ export default function AdminJobsPage() {
                       <TableHead>Status</TableHead>
                       <TableHead>Posted</TableHead>
                       <TableHead>Expires</TableHead>
-                      <TableHead className="w-[140px]">Actions</TableHead>
+                      <TableHead className="w-[80px]">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {jobs.map((job) => {
-                      const canEdit = isJobEditable(job.status);
-                      const reason = getEditDisabledReason(job.status);
-
-                      return (
-                        <TableRow key={job.id}>
-                          <TableCell>
-                            <div>
-                              <p className="font-medium">{job.title}</p>
-                              <p className="text-sm text-muted-foreground">
-                                {job.city || regionLabels[job.region] || job.region}
-                              </p>
-                            </div>
-                          </TableCell>
-                          <TableCell>
-                            {job.employers?.company_name ? (
-                              <span className="text-sm">
-                                {job.employers.company_name}
-                              </span>
-                            ) : (
-                              <span className="text-sm text-muted-foreground">—</span>
-                            )}
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="outline">
-                              {regionLabels[job.region] || job.region}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <span className="text-sm text-muted-foreground">
-                              {categoryLabels[job.category] || job.category}
+                    {jobs.map((job) => (
+                      <TableRow key={job.id}>
+                        <TableCell>
+                          <div>
+                            <p className="font-medium">{job.title}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {job.city || regionLabels[job.region] || job.region}
+                            </p>
+                          </div>
+                        </TableCell>
+                        <TableCell>
+                          {job.employers?.company_name ? (
+                            <span className="text-sm">
+                              {job.employers.company_name}
                             </span>
-                          </TableCell>
-                          <TableCell>
-                            <Badge variant="secondary" className="text-xs">
-                              {employmentTypeLabels[job.employment_type] ||
-                                job.employment_type.replace("_", " ")}
-                            </Badge>
-                          </TableCell>
-                          <TableCell>
-                            <JobStatusSelect
-                              status={job.status}
-                              onStatusChange={(status) =>
-                                handleStatusChange(job, status)
-                              }
-                              disabled={updateStatus.isPending}
-                            />
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {job.posted_at
-                              ? format(new Date(job.posted_at), "MMM d, yyyy")
-                              : "—"}
-                          </TableCell>
-                          <TableCell className="text-sm text-muted-foreground">
-                            {job.expires_at
-                              ? format(new Date(job.expires_at), "MMM d, yyyy")
-                              : "—"}
-                          </TableCell>
-                          <TableCell>
-                            <div className="flex items-center gap-2">
-                              <Tooltip>
-                                <TooltipTrigger asChild>
-                                  <span>
-                                    <Button
-                                      type="button"
-                                      size="sm"
-                                      variant="outline"
-                                      onClick={() => handleEdit(job)}
-                                      disabled={!canEdit}
-                                      aria-disabled={!canEdit}
-                                      aria-label={canEdit ? "Edit job" : reason}
-                                    >
-                                      <Pencil className="h-4 w-4 mr-1" />
-                                      Edit
-                                    </Button>
-                                  </span>
-                                </TooltipTrigger>
-                                {!canEdit ? (
-                                  <TooltipContent>{reason}</TooltipContent>
-                                ) : null}
-                              </Tooltip>
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
-                                asChild
-                              >
-                                <Link to={`/jobs/${job.slug || job.id}`} target="_blank">
-                                  View
+                          ) : (
+                            <span className="text-sm text-muted-foreground">—</span>
+                          )}
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="outline">
+                            {regionLabels[job.region] || job.region}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <span className="text-sm text-muted-foreground">
+                            {categoryLabels[job.category] || job.category}
+                          </span>
+                        </TableCell>
+                        <TableCell>
+                          <Badge variant="secondary" className="text-xs">
+                            {employmentTypeLabels[job.employment_type] ||
+                              job.employment_type.replace("_", " ")}
+                          </Badge>
+                        </TableCell>
+                        <TableCell>
+                          <JobStatusSelect
+                            status={job.status}
+                            onStatusChange={(status) =>
+                              handleStatusChange(job, status)
+                            }
+                            disabled={updateStatus.isPending}
+                          />
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {job.posted_at
+                            ? format(new Date(job.posted_at), "MMM d, yyyy")
+                            : "—"}
+                        </TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {job.expires_at
+                            ? format(new Date(job.expires_at), "MMM d, yyyy")
+                            : "—"}
+                        </TableCell>
+                        <TableCell>
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon">
+                                <MoreHorizontal className="h-4 w-4" />
+                                <span className="sr-only">Actions</span>
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEdit(job)}>
+                                <Pencil className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem asChild>
+                                <Link to={`/jobs/${job.id}`} target="_blank">
+                                  <ExternalLink className="h-4 w-4 mr-2" />
+                                  View Public
                                 </Link>
-                              </Button>
-
-                              <Button
-                                type="button"
-                                size="sm"
-                                variant="ghost"
+                              </DropdownMenuItem>
+                              <DropdownMenuItem
                                 onClick={() => handleDelete(job)}
-                                className="text-destructive hover:text-destructive"
+                                className="text-destructive focus:text-destructive"
                               >
+                                <Trash2 className="h-4 w-4 mr-2" />
                                 Delete
-                              </Button>
-                            </div>
-                          </TableCell>
-                        </TableRow>
-                      );
-                    })}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </TableCell>
+                      </TableRow>
+                    ))}
                   </TableBody>
                 </Table>
               </div>
@@ -361,6 +335,15 @@ export default function AdminJobsPage() {
         )}
       </div>
 
+      {/* Dialogs */}
+      <Dialog open={formOpen} onOpenChange={setFormOpen}>
+        <DialogContent className="max-w-5xl h-[90vh] p-0">
+          <JobEditorTabs
+            jobId={selectedJob?.id}
+            onClose={() => setFormOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
       <DeleteJobDialog
         open={deleteOpen}
         onOpenChange={setDeleteOpen}
@@ -369,4 +352,3 @@ export default function AdminJobsPage() {
     </AdminLayout>
   );
 }
-
