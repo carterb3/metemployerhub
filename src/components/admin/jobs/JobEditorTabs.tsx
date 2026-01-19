@@ -4,16 +4,13 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Form } from "@/components/ui/form";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
-import { Separator } from "@/components/ui/separator";
-import { Loader2, Save, Eye, Copy, FileText, MapPin, DollarSign, Send, Tags, Paperclip, History } from "lucide-react";
+import { Loader2, Save, Eye, Copy, FileText, MapPin, DollarSign, Send, Tags, History } from "lucide-react";
 import { useCreateJob, useUpdateJob, useEmployers, useDuplicateJob, useAdminJob, useTags, useCreateTag } from "@/hooks/useAdminJobs";
-import { regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
-import { Constants } from "@/integrations/supabase/types";
-import type { AdminJobFull, JobFormData, LocationType, ApplicationMethod, PayPeriod } from "@/types/jobs";
-import { locationTypeLabels, applicationMethodLabels, payPeriodLabels, statusColors } from "@/types/jobs";
+import type { LocationType, ApplicationMethod, PayPeriod } from "@/types/jobs";
+import { statusColors } from "@/types/jobs";
 import { DetailsTab } from "./tabs/DetailsTab";
 import { LocationTab } from "./tabs/LocationTab";
 import { CompensationTab } from "./tabs/CompensationTab";
@@ -227,137 +224,143 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   }
 
   return (
-    <div className="flex h-full">
-      <div className={`flex-1 ${showActivityLog ? "pr-80" : ""}`}>
-        {/* Header */}
-        <div className="flex items-center justify-between border-b px-6 py-4">
-          <div>
-            <h2 className="font-serif text-xl font-bold">
-              {isEditing ? "Edit Job Posting" : "Create New Job Posting"}
-            </h2>
-            {isEditing && job && (
-              <div className="flex items-center gap-2 mt-1">
-                <Badge className={statusColors[job.status]}>{job.status}</Badge>
-                {job.featured && <Badge variant="outline">Featured</Badge>}
-                {job.slug && (
-                  <span className="text-xs text-muted-foreground">/jobs/{job.slug}</span>
-                )}
+    <Form {...form}>
+      <div className="flex h-full">
+        <div className={`flex-1 ${showActivityLog ? "pr-80" : ""}`}>
+          {/* Header */}
+          <div className="flex items-center justify-between border-b px-6 py-4">
+            <div>
+              <h2 className="font-serif text-xl font-bold">
+                {isEditing ? "Edit Job Posting" : "Create New Job Posting"}
+              </h2>
+              {isEditing && job && (
+                <div className="flex items-center gap-2 mt-1">
+                  <Badge className={statusColors[job.status]}>{job.status}</Badge>
+                  {job.featured && <Badge variant="outline">Featured</Badge>}
+                  {job.slug && (
+                    <span className="text-xs text-muted-foreground">/jobs/{job.slug}</span>
+                  )}
+                </div>
+              )}
+            </div>
+            <div className="flex items-center gap-2">
+              {isEditing && (
+                <>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setShowActivityLog(!showActivityLog)}
+                  >
+                    <History className="h-4 w-4 mr-1" />
+                    History
+                  </Button>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={handleDuplicate}
+                    disabled={isLoading}
+                  >
+                    <Copy className="h-4 w-4 mr-1" />
+                    Duplicate
+                  </Button>
+                </>
+              )}
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleSaveDraft}
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
+                Save Draft
+              </Button>
+              <Button
+                type="button"
+                size="sm"
+                onClick={form.handleSubmit(onSubmit)}
+                disabled={isLoading}
+              >
+                {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
+                {isEditing ? "Update" : "Create"} Job
+              </Button>
+            </div>
+          </div>
+
+          {/* Tabs */}
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
+            <div className="border-b px-6">
+              <TabsList className="h-12 bg-transparent">
+                <TabsTrigger value="details" className="data-[state=active]:bg-background">
+                  <FileText className="h-4 w-4 mr-2" />
+                  Details
+                </TabsTrigger>
+                <TabsTrigger value="location" className="data-[state=active]:bg-background">
+                  <MapPin className="h-4 w-4 mr-2" />
+                  Location
+                </TabsTrigger>
+                <TabsTrigger value="compensation" className="data-[state=active]:bg-background">
+                  <DollarSign className="h-4 w-4 mr-2" />
+                  Compensation
+                </TabsTrigger>
+                <TabsTrigger value="application" className="data-[state=active]:bg-background">
+                  <Send className="h-4 w-4 mr-2" />
+                  Application
+                </TabsTrigger>
+                <TabsTrigger value="tags" className="data-[state=active]:bg-background">
+                  <Tags className="h-4 w-4 mr-2" />
+                  Tags & Files
+                </TabsTrigger>
+                <TabsTrigger value="preview" className="data-[state=active]:bg-background">
+                  <Eye className="h-4 w-4 mr-2" />
+                  Preview
+                </TabsTrigger>
+              </TabsList>
+            </div>
+
+            <ScrollArea className="h-[calc(100vh-220px)]">
+              <div className="p-6">
+                <TabsContent value="details" className="mt-0">
+                  <DetailsTab form={form} employers={employers} />
+                </TabsContent>
+
+                <TabsContent value="location" className="mt-0">
+                  <LocationTab form={form} />
+                </TabsContent>
+
+                <TabsContent value="compensation" className="mt-0">
+                  <CompensationTab form={form} />
+                </TabsContent>
+
+                <TabsContent value="application" className="mt-0">
+                  <ApplicationTab form={form} />
+                </TabsContent>
+
+                <TabsContent value="tags" className="mt-0">
+                  <TagsAttachmentsTab
+                    form={form}
+                    tags={tags}
+                    onCreateTag={(name) => createTag.mutateAsync(name)}
+                    jobId={jobId || undefined}
+                    attachments={job?.attachments || []}
+                  />
+                </TabsContent>
+
+                <TabsContent value="preview" className="mt-0">
+                  <PreviewTab form={form} employers={employers} tags={tags} />
+                </TabsContent>
               </div>
-            )}
-          </div>
-          <div className="flex items-center gap-2">
-            {isEditing && (
-              <>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setShowActivityLog(!showActivityLog)}
-                >
-                  <History className="h-4 w-4 mr-1" />
-                  History
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleDuplicate}
-                  disabled={isLoading}
-                >
-                  <Copy className="h-4 w-4 mr-1" />
-                  Duplicate
-                </Button>
-              </>
-            )}
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={handleSaveDraft}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : <Save className="h-4 w-4 mr-1" />}
-              Save Draft
-            </Button>
-            <Button
-              size="sm"
-              onClick={form.handleSubmit(onSubmit)}
-              disabled={isLoading}
-            >
-              {isLoading ? <Loader2 className="h-4 w-4 animate-spin mr-1" /> : null}
-              {isEditing ? "Update" : "Create"} Job
-            </Button>
-          </div>
+            </ScrollArea>
+          </Tabs>
         </div>
 
-        {/* Tabs */}
-        <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1">
-          <div className="border-b px-6">
-            <TabsList className="h-12 bg-transparent">
-              <TabsTrigger value="details" className="data-[state=active]:bg-background">
-                <FileText className="h-4 w-4 mr-2" />
-                Details
-              </TabsTrigger>
-              <TabsTrigger value="location" className="data-[state=active]:bg-background">
-                <MapPin className="h-4 w-4 mr-2" />
-                Location
-              </TabsTrigger>
-              <TabsTrigger value="compensation" className="data-[state=active]:bg-background">
-                <DollarSign className="h-4 w-4 mr-2" />
-                Compensation
-              </TabsTrigger>
-              <TabsTrigger value="application" className="data-[state=active]:bg-background">
-                <Send className="h-4 w-4 mr-2" />
-                Application
-              </TabsTrigger>
-              <TabsTrigger value="tags" className="data-[state=active]:bg-background">
-                <Tags className="h-4 w-4 mr-2" />
-                Tags & Files
-              </TabsTrigger>
-              <TabsTrigger value="preview" className="data-[state=active]:bg-background">
-                <Eye className="h-4 w-4 mr-2" />
-                Preview
-              </TabsTrigger>
-            </TabsList>
-          </div>
-
-          <ScrollArea className="h-[calc(100vh-220px)]">
-            <div className="p-6">
-              <TabsContent value="details" className="mt-0">
-                <DetailsTab form={form} employers={employers} />
-              </TabsContent>
-
-              <TabsContent value="location" className="mt-0">
-                <LocationTab form={form} />
-              </TabsContent>
-
-              <TabsContent value="compensation" className="mt-0">
-                <CompensationTab form={form} />
-              </TabsContent>
-
-              <TabsContent value="application" className="mt-0">
-                <ApplicationTab form={form} />
-              </TabsContent>
-
-              <TabsContent value="tags" className="mt-0">
-                <TagsAttachmentsTab
-                  form={form}
-                  tags={tags}
-                  onCreateTag={(name) => createTag.mutateAsync(name)}
-                  jobId={jobId || undefined}
-                  attachments={job?.attachments || []}
-                />
-              </TabsContent>
-
-              <TabsContent value="preview" className="mt-0">
-                <PreviewTab form={form} employers={employers} tags={tags} />
-              </TabsContent>
-            </div>
-          </ScrollArea>
-        </Tabs>
+        {/* Activity Log Sidebar */}
+        {showActivityLog && isEditing && jobId && (
+          <ActivityLogPanel jobId={jobId} onClose={() => setShowActivityLog(false)} />
+        )}
       </div>
-
-      {/* Activity Log Sidebar */}
-      {showActivityLog && isEditing && jobId && (
-        <ActivityLogPanel jobId={jobId} onClose={() => setShowActivityLog(false)} />
-      )}
-    </div>
+    </Form>
   );
 }
