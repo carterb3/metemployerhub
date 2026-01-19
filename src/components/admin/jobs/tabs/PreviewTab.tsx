@@ -129,7 +129,15 @@ export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
               <div className="space-y-3">
                 <h3 className="font-semibold text-lg">Requirements</h3>
                 <div className="prose prose-sm max-w-none">
-                  <p className="whitespace-pre-wrap">{values.requirements}</p>
+                  {isHtmlContent(values.requirements) ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeHtml(values.requirements),
+                      }}
+                    />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{values.requirements}</p>
+                  )}
                 </div>
               </div>
             </>

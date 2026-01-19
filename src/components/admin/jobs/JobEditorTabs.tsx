@@ -151,11 +151,12 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   const prepareSubmitData = (values: JobFormValues) => {
     // Sanitize HTML content before saving to database
     const sanitizedDescription = sanitizeHtml(values.description);
+    const sanitizedRequirements = values.requirements ? sanitizeHtml(values.requirements) : null;
     
     return {
       title: values.title.trim(),
       description: sanitizedDescription,
-      requirements: values.requirements || null,
+      requirements: sanitizedRequirements,
       region: values.region as any,
       city: values.city || null,
       category: values.category as any,
