@@ -35,10 +35,10 @@ export function TagsAttachmentsTab({
   const uploadAttachment = useUploadAttachment();
   const deleteAttachment = useDeleteAttachment();
 
-  const selectedTags = form.watch("tags") || [];
+  const selectedTags = form.watch("tags") ?? [];
 
   const handleToggleTag = (tagId: string) => {
-    const current = form.getValues("tags") || [];
+    const current = form.getValues("tags") ?? [];
     if (current.includes(tagId)) {
       form.setValue(
         "tags",
@@ -55,10 +55,12 @@ export function TagsAttachmentsTab({
     try {
       const tag = await onCreateTag(newTag.trim());
       if (tag) {
-        const current = form.getValues("tags") || [];
+        const current = form.getValues("tags") ?? [];
         form.setValue("tags", [...current, tag.id]);
       }
       setNewTag("");
+    } catch (err) {
+      console.error("Error creating tag:", err);
     } finally {
       setIsCreatingTag(false);
     }
@@ -68,24 +70,32 @@ export function TagsAttachmentsTab({
     const file = e.target.files?.[0];
     if (!file || !jobId) return;
 
-    await uploadAttachment.mutateAsync({
-      jobId,
-      file,
-      isPublic: uploadPublic,
-    });
-
-    if (fileInputRef.current) {
-      fileInputRef.current.value = "";
+    try {
+      await uploadAttachment.mutateAsync({
+        jobId,
+        file,
+        isPublic: uploadPublic,
+      });
+    } catch (err) {
+      console.error("Error uploading file:", err);
+    } finally {
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
     }
   };
 
   const handleDeleteAttachment = async (attachment: JobAttachment) => {
     if (!jobId) return;
-    await deleteAttachment.mutateAsync({
-      id: attachment.id,
-      filePath: attachment.file_path,
-      jobId,
-    });
+    try {
+      await deleteAttachment.mutateAsync({
+        id: attachment.id,
+        filePath: attachment.file_path,
+        jobId,
+      });
+    } catch (err) {
+      console.error("Error deleting attachment:", err);
+    }
   };
 
   const formatFileSize = (bytes: number | null) => {

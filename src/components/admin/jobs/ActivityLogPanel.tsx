@@ -39,22 +39,31 @@ export function ActivityLogPanel({ jobId, onClose }: ActivityLogPanelProps) {
   const { data: logs = [], isLoading } = useJobActivityLog(jobId);
 
   const getChangeSummary = (log: typeof logs[0]): string => {
-    if (log.action === "status_change" && log.before_state && log.after_state) {
-      return `${log.before_state.status} → ${log.after_state.status}`;
-    }
-    if (log.action === "update" && log.before_state && log.after_state) {
-      const changes: string[] = [];
-      const fields = ["title", "description", "status", "region", "category"];
-      for (const field of fields) {
-        if (log.before_state[field] !== log.after_state[field]) {
-          changes.push(field);
+    try {
+      if (log?.action === "status_change" && log?.before_state && log?.after_state) {
+        const before = log.before_state as any;
+        const after = log.after_state as any;
+        return `${before?.status ?? "unknown"} → ${after?.status ?? "unknown"}`;
+      }
+      if (log?.action === "update" && log?.before_state && log?.after_state) {
+        const before = log.before_state as any;
+        const after = log.after_state as any;
+        const changes: string[] = [];
+        const fields = ["title", "description", "status", "region", "category"];
+        for (const field of fields) {
+          if (before?.[field] !== after?.[field]) {
+            changes.push(field);
+          }
+        }
+        if (changes.length > 0) {
+          return `Changed: ${changes.slice(0, 3).join(", ")}${changes.length > 3 ? ` +${changes.length - 3} more` : ""}`;
         }
       }
-      if (changes.length > 0) {
-        return `Changed: ${changes.slice(0, 3).join(", ")}${changes.length > 3 ? ` +${changes.length - 3} more` : ""}`;
-      }
+      return "";
+    } catch (err) {
+      console.error("Error getting change summary:", err);
+      return "";
     }
-    return "";
   };
 
   return (
@@ -78,8 +87,9 @@ export function ActivityLogPanel({ jobId, onClose }: ActivityLogPanelProps) {
         ) : (
           <div className="p-4 space-y-4">
             {logs.map((log, index) => {
-              const Icon = actionIcons[log.action] || FileEdit;
-              const colorClass = actionColors[log.action] || "bg-muted text-muted-foreground";
+              if (!log) return null;
+              const Icon = actionIcons[log.action] ?? FileEdit;
+              const colorClass = actionColors[log.action] ?? "bg-muted text-muted-foreground";
               const summary = getChangeSummary(log);
 
               return (
