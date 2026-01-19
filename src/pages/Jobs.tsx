@@ -1,6 +1,19 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import { Search, MapPin, Briefcase, Clock, Filter, X, ArrowRight, Loader2 } from "lucide-react";
+import { Helmet } from "react-helmet-async";
+import { 
+  Search, 
+  MapPin, 
+  Briefcase, 
+  Clock, 
+  Filter, 
+  X, 
+  ArrowRight, 
+  Loader2,
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal
+} from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,17 +26,26 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/components/ui/sheet";
 import { cn } from "@/lib/utils";
+import { JobCard, JobCardSkeleton } from "@/components/jobs/JobCard";
 import { 
   useJobs, 
   regionLabels, 
   categoryLabels, 
   employmentTypeLabels,
-  isJobNew,
-  formatPostedDate,
   Job
 } from "@/hooks/useJobs";
 import { MMFJobWidget } from "@/components/jobs/MMFJobWidget";
+
+const JOBS_PER_PAGE = 12;
 
 // Filter options from database enums
 const regions = [
@@ -71,61 +93,6 @@ const listingTabs = [
   { value: "training_programs", label: "Training Programs" },
 ];
 
-interface JobCardProps {
-  job: Job;
-}
-
-function JobCard({ job }: JobCardProps) {
-  return (
-    <Link
-      to={`/jobs/${job.id}`}
-      className="group block bg-card rounded-xl border border-border p-5 transition-all duration-300 hover:shadow-card-hover hover:-translate-y-0.5"
-    >
-      <div className="flex items-start justify-between gap-4 mb-3">
-        <div className="flex-1 min-w-0">
-          <h3 className="font-semibold text-lg text-foreground group-hover:text-primary transition-colors">
-            {job.title}
-          </h3>
-          <p className="text-muted-foreground">
-            {job.employers?.company_name || "Employer"}
-          </p>
-        </div>
-        <div className="flex gap-1.5 shrink-0">
-          {isJobNew(job.posted_at) && <Badge variant="new">New</Badge>}
-          {job.is_remote && <Badge variant="remote">Remote</Badge>}
-        </div>
-      </div>
-
-      <p className="text-sm text-muted-foreground mb-4 line-clamp-2">
-        {job.description}
-      </p>
-
-      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-muted-foreground mb-3">
-        <span className="flex items-center gap-1">
-          <MapPin className="h-3.5 w-3.5" />
-          {job.city ? `${job.city}, ` : ""}
-          {regionLabels[job.region] || job.region}
-        </span>
-        <span className="flex items-center gap-1">
-          <Briefcase className="h-3.5 w-3.5" />
-          {employmentTypeLabels[job.employment_type] || job.employment_type}
-        </span>
-        <span className="flex items-center gap-1">
-          <Clock className="h-3.5 w-3.5" />
-          {formatPostedDate(job.posted_at)}
-        </span>
-      </div>
-
-      <div className="flex items-center justify-start pt-3">
-        <span className="text-sm font-medium text-primary hover:text-[#b12028] flex items-center transition-colors">
-          View Details
-          <ArrowRight className="ml-1 h-3.5 w-3.5" />
-        </span>
-      </div>
-    </Link>
-  );
-}
-
 interface JobListProps {
   jobs: Job[] | undefined;
   isLoading: boolean;
@@ -133,9 +100,22 @@ interface JobListProps {
   hasActiveFilters: boolean;
   clearFilters: () => void;
   emptyMessage?: string;
+  currentPage: number;
+  totalPages: number;
+  onPageChange: (page: number) => void;
 }
 
-function JobList({ jobs, isLoading, error, hasActiveFilters, clearFilters, emptyMessage }: JobListProps) {
+function JobList({ 
+  jobs, 
+  isLoading, 
+  error, 
+  hasActiveFilters, 
+  clearFilters, 
+  emptyMessage,
+  currentPage,
+  totalPages,
+  onPageChange
+}: JobListProps) {
   if (error) {
     return (
       <div className="text-center py-16">
@@ -149,14 +129,9 @@ function JobList({ jobs, isLoading, error, hasActiveFilters, clearFilters, empty
 
   if (isLoading) {
     return (
-      <div className="space-y-4">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="bg-card rounded-xl border border-border p-5 animate-pulse">
-            <div className="h-6 bg-muted rounded w-2/3 mb-3" />
-            <div className="h-4 bg-muted rounded w-1/3 mb-4" />
-            <div className="h-4 bg-muted rounded w-full mb-2" />
-            <div className="h-4 bg-muted rounded w-3/4" />
-          </div>
+      <div className="grid gap-4 sm:grid-cols-2">
+        {[1, 2, 3, 4, 5, 6].map((i) => (
+          <JobCardSkeleton key={i} />
         ))}
       </div>
     );
@@ -164,22 +139,22 @@ function JobList({ jobs, isLoading, error, hasActiveFilters, clearFilters, empty
 
   if (!jobs || jobs.length === 0) {
     return (
-      <div className="text-center py-16">
+      <div className="text-center py-16 bg-card/50 backdrop-blur-sm rounded-xl border border-border">
         <div className="w-16 h-16 bg-muted rounded-full flex items-center justify-center mx-auto mb-4">
           <Search className="h-8 w-8 text-muted-foreground" />
         </div>
         <h3 className="font-serif text-xl font-semibold text-foreground mb-2">
           No jobs found
         </h3>
-        <p className="text-muted-foreground mb-4">
+        <p className="text-muted-foreground mb-4 max-w-md mx-auto">
           {emptyMessage || (hasActiveFilters 
-            ? "Try adjusting your search or filters"
+            ? "Try adjusting your search or filters to find more opportunities"
             : "Check back soon for new opportunities"
           )}
         </p>
         {hasActiveFilters && (
           <Button variant="outline" onClick={clearFilters}>
-            Clear Filters
+            Clear All Filters
           </Button>
         )}
       </div>
@@ -187,31 +162,209 @@ function JobList({ jobs, isLoading, error, hasActiveFilters, clearFilters, empty
   }
 
   return (
-    <div className="space-y-4">
-      {jobs.map((job) => (
-        <JobCard key={job.id} job={job} />
-      ))}
+    <div className="space-y-6">
+      {/* Job Grid */}
+      <div className="grid gap-4 sm:grid-cols-2">
+        {jobs.map((job, index) => (
+          <div 
+            key={job.id}
+            className="animate-fade-in"
+            style={{ animationDelay: `${index * 50}ms` }}
+          >
+            <JobCard job={job} />
+          </div>
+        ))}
+      </div>
+
+      {/* Pagination */}
+      {totalPages > 1 && (
+        <div className="flex items-center justify-center gap-2 pt-6">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage - 1)}
+            disabled={currentPage === 1}
+          >
+            <ChevronLeft className="h-4 w-4 mr-1" />
+            Previous
+          </Button>
+          
+          <div className="flex items-center gap-1">
+            {Array.from({ length: totalPages }, (_, i) => i + 1)
+              .filter(page => {
+                // Show first, last, current, and adjacent pages
+                return page === 1 || 
+                       page === totalPages || 
+                       Math.abs(page - currentPage) <= 1;
+              })
+              .map((page, index, array) => {
+                // Add ellipsis
+                const showEllipsis = index > 0 && page - array[index - 1] > 1;
+                return (
+                  <div key={page} className="flex items-center">
+                    {showEllipsis && (
+                      <span className="px-2 text-muted-foreground">...</span>
+                    )}
+                    <Button
+                      variant={currentPage === page ? "default" : "ghost"}
+                      size="sm"
+                      onClick={() => onPageChange(page)}
+                      className="w-9 h-9"
+                    >
+                      {page}
+                    </Button>
+                  </div>
+                );
+              })}
+          </div>
+
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => onPageChange(currentPage + 1)}
+            disabled={currentPage === totalPages}
+          >
+            Next
+            <ChevronRight className="h-4 w-4 ml-1" />
+          </Button>
+        </div>
+      )}
+    </div>
+  );
+}
+
+interface FiltersContentProps {
+  selectedRegion: string;
+  setSelectedRegion: (value: string) => void;
+  selectedCategory: string;
+  setSelectedCategory: (value: string) => void;
+  selectedType: string;
+  setSelectedType: (value: string) => void;
+  hasActiveFilters: boolean;
+  clearFilters: () => void;
+  onApply?: () => void;
+}
+
+function FiltersContent({
+  selectedRegion,
+  setSelectedRegion,
+  selectedCategory,
+  setSelectedCategory,
+  selectedType,
+  setSelectedType,
+  hasActiveFilters,
+  clearFilters,
+  onApply
+}: FiltersContentProps) {
+  return (
+    <div className="space-y-5">
+      <div className="flex items-center justify-between">
+        <h2 className="font-semibold text-foreground">Filters</h2>
+        {hasActiveFilters && (
+          <button
+            onClick={clearFilters}
+            className="text-sm text-accent hover:underline"
+          >
+            Clear all
+          </button>
+        )}
+      </div>
+
+      <div className="space-y-5">
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Region
+          </label>
+          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {regions.map((region) => (
+                <SelectItem key={region.value} value={region.value}>
+                  {region.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Category
+          </label>
+          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {categories.map((category) => (
+                <SelectItem key={category.value} value={category.value}>
+                  {category.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+
+        <div>
+          <label className="text-sm font-medium text-foreground mb-2 block">
+            Job Type
+          </label>
+          <Select value={selectedType} onValueChange={setSelectedType}>
+            <SelectTrigger>
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              {employmentTypes.map((type) => (
+                <SelectItem key={type.value} value={type.value}>
+                  {type.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+        </div>
+      </div>
+
+      {onApply && (
+        <Button className="w-full" onClick={onApply}>
+          Apply Filters
+        </Button>
+      )}
     </div>
   );
 }
 
 export default function JobsPage() {
-  const [searchParams] = useSearchParams();
-  const [activeTab, setActiveTab] = useState("mmf");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [activeTab, setActiveTab] = useState(searchParams.get("tab") || "mmf");
   const [searchQuery, setSearchQuery] = useState(searchParams.get("q") || "");
   const [debouncedSearch, setDebouncedSearch] = useState(searchQuery);
   const [selectedRegion, setSelectedRegion] = useState(searchParams.get("region") || "all");
   const [selectedCategory, setSelectedCategory] = useState(searchParams.get("category") || "all");
   const [selectedType, setSelectedType] = useState(searchParams.get("type") || "all");
-  const [showMobileFilters, setShowMobileFilters] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [mobileFiltersOpen, setMobileFiltersOpen] = useState(false);
 
   // Debounce search
-  useMemo(() => {
+  useEffect(() => {
     const timer = setTimeout(() => {
       setDebouncedSearch(searchQuery);
+      setCurrentPage(1); // Reset to first page on search
     }, 300);
     return () => clearTimeout(timer);
   }, [searchQuery]);
+
+  // Update URL params
+  useEffect(() => {
+    const params = new URLSearchParams();
+    if (activeTab !== "mmf") params.set("tab", activeTab);
+    if (searchQuery) params.set("q", searchQuery);
+    if (selectedRegion !== "all") params.set("region", selectedRegion);
+    if (selectedCategory !== "all") params.set("category", selectedCategory);
+    if (selectedType !== "all") params.set("type", selectedType);
+    setSearchParams(params, { replace: true });
+  }, [activeTab, searchQuery, selectedRegion, selectedCategory, selectedType, setSearchParams]);
 
   // Fetch jobs with filters
   const { data: allJobs, isLoading, error } = useJobs({
@@ -233,70 +386,181 @@ export default function JobsPage() {
     };
   }, [allJobs]);
 
+  // Paginate jobs for current tab
+  const paginatedJobs = useMemo(() => {
+    const tabJobs = filteredJobs[activeTab as keyof typeof filteredJobs] || [];
+    const startIndex = (currentPage - 1) * JOBS_PER_PAGE;
+    return tabJobs.slice(startIndex, startIndex + JOBS_PER_PAGE);
+  }, [filteredJobs, activeTab, currentPage]);
+
+  const totalPages = useMemo(() => {
+    const tabJobs = filteredJobs[activeTab as keyof typeof filteredJobs] || [];
+    return Math.ceil(tabJobs.length / JOBS_PER_PAGE);
+  }, [filteredJobs, activeTab]);
+
   const clearFilters = () => {
     setSearchQuery("");
     setDebouncedSearch("");
     setSelectedRegion("all");
     setSelectedCategory("all");
     setSelectedType("all");
+    setCurrentPage(1);
   };
 
   const hasActiveFilters =
     !!searchQuery || selectedRegion !== "all" || selectedCategory !== "all" || selectedType !== "all";
 
   const getJobCount = (tabValue: string) => {
-    if (tabValue === "mmf") return null; // External widget, no count
+    if (tabValue === "mmf") return null;
     return filteredJobs[tabValue as keyof typeof filteredJobs]?.length || 0;
   };
 
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Generate JSON-LD for job listings
+  const jobListingSchema = useMemo(() => {
+    const tabJobs = filteredJobs[activeTab as keyof typeof filteredJobs] || [];
+    if (tabJobs.length === 0) return null;
+
+    return {
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "itemListElement": tabJobs.slice(0, 10).map((job, index) => ({
+        "@type": "ListItem",
+        "position": index + 1,
+        "item": {
+          "@type": "JobPosting",
+          "title": job.title,
+          "description": job.description?.slice(0, 200),
+          "datePosted": job.posted_at,
+          "employmentType": job.employment_type?.toUpperCase().replace("_", "_"),
+          "jobLocation": {
+            "@type": "Place",
+            "address": {
+              "@type": "PostalAddress",
+              "addressLocality": job.city || regionLabels[job.region] || job.region,
+              "addressRegion": "MB",
+              "addressCountry": "CA"
+            }
+          },
+          "hiringOrganization": {
+            "@type": "Organization",
+            "name": job.employers?.company_name || "Employer"
+          }
+        }
+      }))
+    };
+  }, [filteredJobs, activeTab]);
+
   return (
     <Layout>
+      <Helmet>
+        <title>Job Listings | Métis Employment & Training</title>
+        <meta 
+          name="description" 
+          content="Browse job opportunities across Manitoba for Red River Métis job seekers. Find full-time, part-time, contract, and training positions from employers who value Métis talent." 
+        />
+        <meta property="og:title" content="Job Listings | Métis Employment & Training" />
+        <meta property="og:description" content="Find your next career opportunity with MET. Browse hundreds of jobs from employers across Manitoba." />
+        <meta property="og:type" content="website" />
+        <link rel="canonical" href="/jobs" />
+        {jobListingSchema && (
+          <script type="application/ld+json">
+            {JSON.stringify(jobListingSchema)}
+          </script>
+        )}
+      </Helmet>
+
       {/* Hero Section */}
-      <section className="bg-primary py-12 sm:py-16">
+      <section className="bg-gradient-to-br from-primary via-primary to-primary/90 py-12 sm:py-16">
         <div className="container-mobile">
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
             Find Your Next Opportunity
           </h1>
           <p className="text-lg text-primary-foreground/80 mb-8 max-w-2xl">
-            Browse job openings from employers across Manitoba who value Métis talent.
+            Browse job openings from employers across Manitoba who value Red River Métis talent.
           </p>
 
           {/* Search Bar - only show for non-MMF tabs */}
           {activeTab !== "mmf" && (
             <div className="flex gap-3">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
+              <div className="relative flex-1 max-w-2xl">
+                <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   type="text"
-                  placeholder="Search by job title or keyword..."
+                  placeholder="Search by job title, keyword, or company..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
-                  className="pl-10 h-12 bg-background border-0"
+                  className="pl-12 h-12 bg-background/95 backdrop-blur-sm border-0 shadow-lg"
+                  aria-label="Search jobs"
                 />
+                {searchQuery && (
+                  <button
+                    onClick={() => setSearchQuery("")}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:bg-muted rounded"
+                    aria-label="Clear search"
+                  >
+                    <X className="h-4 w-4 text-muted-foreground" />
+                  </button>
+                )}
               </div>
-              <Button
-                variant="hero-outline"
-                size="lg"
-                className="lg:hidden"
-                onClick={() => setShowMobileFilters(!showMobileFilters)}
-              >
-                <Filter className="h-5 w-5" />
-              </Button>
+              
+              {/* Mobile Filter Button */}
+              <Sheet open={mobileFiltersOpen} onOpenChange={setMobileFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="hero-outline"
+                    size="lg"
+                    className="lg:hidden h-12"
+                  >
+                    <SlidersHorizontal className="h-5 w-5" />
+                    {hasActiveFilters && (
+                      <span className="ml-2 bg-accent text-accent-foreground text-xs px-1.5 py-0.5 rounded-full">
+                        {[selectedRegion !== "all", selectedCategory !== "all", selectedType !== "all"].filter(Boolean).length}
+                      </span>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent side="left" className="w-80">
+                  <SheetHeader>
+                    <SheetTitle>Filter Jobs</SheetTitle>
+                    <SheetDescription>
+                      Narrow down your job search
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="mt-6">
+                    <FiltersContent
+                      selectedRegion={selectedRegion}
+                      setSelectedRegion={setSelectedRegion}
+                      selectedCategory={selectedCategory}
+                      setSelectedCategory={setSelectedCategory}
+                      selectedType={selectedType}
+                      setSelectedType={setSelectedType}
+                      hasActiveFilters={hasActiveFilters}
+                      clearFilters={clearFilters}
+                      onApply={() => setMobileFiltersOpen(false)}
+                    />
+                  </div>
+                </SheetContent>
+              </Sheet>
             </div>
           )}
         </div>
       </section>
 
       {/* Category Tabs */}
-      <section className="bg-background border-b border-border">
+      <section className="bg-background border-b border-border sticky top-14 z-30">
         <div className="container-mobile">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-            <TabsList className="w-full justify-start h-auto p-0 bg-transparent gap-0 overflow-x-auto flex-nowrap">
+          <Tabs value={activeTab} onValueChange={(v) => { setActiveTab(v); setCurrentPage(1); }} className="w-full">
+            <TabsList className="w-full justify-start h-auto p-0 bg-transparent gap-0 overflow-x-auto flex-nowrap scrollbar-hide">
               {listingTabs.map((tab) => (
                 <TabsTrigger
                   key={tab.value}
                   value={tab.value}
-                  className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent whitespace-nowrap"
+                  className="px-4 py-3 rounded-none border-b-2 border-transparent data-[state=active]:border-primary data-[state=active]:bg-transparent whitespace-nowrap text-sm sm:text-base"
                 >
                   {tab.label}
                   {getJobCount(tab.value) !== null && (
@@ -312,7 +576,7 @@ export default function JobsPage() {
       </section>
 
       {/* Main Content */}
-      <section className="section-padding bg-background">
+      <section className="section-padding bg-gradient-to-b from-background to-secondary/20">
         <div className="container-mobile">
           <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
             {/* MMF Widget Tab */}
@@ -324,89 +588,19 @@ export default function JobsPage() {
             {["summer_employment", "met_positions", "partner_jobs", "training_programs"].map((tabValue) => (
               <TabsContent key={tabValue} value={tabValue} className="mt-0">
                 <div className="flex flex-col lg:flex-row gap-8">
-                  {/* Filters Sidebar */}
-                  <aside
-                    className={cn(
-                      "lg:w-64 shrink-0",
-                      showMobileFilters ? "block" : "hidden lg:block"
-                    )}
-                  >
-                    <div className="bg-card rounded-xl border border-border p-5 sticky top-24">
-                      <div className="flex items-center justify-between mb-5">
-                        <h2 className="font-semibold text-foreground">Filters</h2>
-                        {hasActiveFilters && (
-                          <button
-                            onClick={clearFilters}
-                            className="text-sm text-accent hover:underline"
-                          >
-                            Clear all
-                          </button>
-                        )}
-                      </div>
-
-                      <div className="space-y-5">
-                        <div>
-                          <label className="text-sm font-medium text-foreground mb-2 block">
-                            Region
-                          </label>
-                          <Select value={selectedRegion} onValueChange={setSelectedRegion}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {regions.map((region) => (
-                                <SelectItem key={region.value} value={region.value}>
-                                  {region.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium text-foreground mb-2 block">
-                            Category
-                          </label>
-                          <Select value={selectedCategory} onValueChange={setSelectedCategory}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((category) => (
-                                <SelectItem key={category.value} value={category.value}>
-                                  {category.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-
-                        <div>
-                          <label className="text-sm font-medium text-foreground mb-2 block">
-                            Job Type
-                          </label>
-                          <Select value={selectedType} onValueChange={setSelectedType}>
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {employmentTypes.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      <Button
-                        variant="outline"
-                        className="w-full mt-5 lg:hidden"
-                        onClick={() => setShowMobileFilters(false)}
-                      >
-                        Apply Filters
-                      </Button>
+                  {/* Filters Sidebar - Desktop */}
+                  <aside className="hidden lg:block lg:w-64 shrink-0">
+                    <div className="bg-card/80 backdrop-blur-sm rounded-xl border border-border p-5 sticky top-32">
+                      <FiltersContent
+                        selectedRegion={selectedRegion}
+                        setSelectedRegion={setSelectedRegion}
+                        selectedCategory={selectedCategory}
+                        setSelectedCategory={setSelectedCategory}
+                        selectedType={selectedType}
+                        setSelectedType={setSelectedType}
+                        hasActiveFilters={hasActiveFilters}
+                        clearFilters={clearFilters}
+                      />
                     </div>
                   </aside>
 
@@ -422,7 +616,7 @@ export default function JobsPage() {
                           </span>
                         ) : (
                           <>
-                            <span className="font-medium text-foreground">
+                            <span className="font-semibold text-foreground">
                               {filteredJobs[tabValue as keyof typeof filteredJobs]?.length || 0}
                             </span>{" "}
                             {(filteredJobs[tabValue as keyof typeof filteredJobs]?.length || 0) === 1 ? "job" : "jobs"} found
@@ -431,19 +625,19 @@ export default function JobsPage() {
                       </p>
                     </div>
 
-                    {/* Active Filters */}
+                    {/* Active Filters Pills */}
                     {hasActiveFilters && (
                       <div className="flex flex-wrap gap-2 mb-6">
                         {searchQuery && (
-                          <Badge variant="secondary" className="gap-1 pr-1">
-                            "{searchQuery}"
+                          <Badge variant="secondary" className="gap-1 pr-1 py-1">
+                            Search: "{searchQuery}"
                             <button onClick={() => setSearchQuery("")} className="ml-1 p-0.5 hover:bg-muted rounded">
                               <X className="h-3 w-3" />
                             </button>
                           </Badge>
                         )}
                         {selectedRegion !== "all" && (
-                          <Badge variant="secondary" className="gap-1 pr-1">
+                          <Badge variant="secondary" className="gap-1 pr-1 py-1">
                             {regionLabels[selectedRegion] || selectedRegion}
                             <button onClick={() => setSelectedRegion("all")} className="ml-1 p-0.5 hover:bg-muted rounded">
                               <X className="h-3 w-3" />
@@ -451,7 +645,7 @@ export default function JobsPage() {
                           </Badge>
                         )}
                         {selectedCategory !== "all" && (
-                          <Badge variant="secondary" className="gap-1 pr-1">
+                          <Badge variant="secondary" className="gap-1 pr-1 py-1">
                             {categoryLabels[selectedCategory] || selectedCategory}
                             <button onClick={() => setSelectedCategory("all")} className="ml-1 p-0.5 hover:bg-muted rounded">
                               <X className="h-3 w-3" />
@@ -459,7 +653,7 @@ export default function JobsPage() {
                           </Badge>
                         )}
                         {selectedType !== "all" && (
-                          <Badge variant="secondary" className="gap-1 pr-1">
+                          <Badge variant="secondary" className="gap-1 pr-1 py-1">
                             {employmentTypeLabels[selectedType] || selectedType}
                             <button onClick={() => setSelectedType("all")} className="ml-1 p-0.5 hover:bg-muted rounded">
                               <X className="h-3 w-3" />
@@ -470,11 +664,14 @@ export default function JobsPage() {
                     )}
 
                     <JobList
-                      jobs={filteredJobs[tabValue as keyof typeof filteredJobs]}
+                      jobs={paginatedJobs}
                       isLoading={isLoading}
                       error={error}
                       hasActiveFilters={hasActiveFilters}
                       clearFilters={clearFilters}
+                      currentPage={currentPage}
+                      totalPages={totalPages}
+                      onPageChange={handlePageChange}
                       emptyMessage={
                         tabValue === "training_programs" 
                           ? "Training program opportunities coming soon" 
