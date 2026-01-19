@@ -15,8 +15,8 @@ interface PreviewTabProps {
 
 export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
   const values = form.watch();
-  const employer = employers.find((e) => e.id === values.employer_id);
-  const selectedTags = tags.filter((t) => values.tags?.includes(t.id));
+  const employer = (employers ?? []).find((e) => e.id === values.employer_id);
+  const selectedTags = (tags ?? []).filter((t) => values.tags?.includes(t.id));
 
   const formatPay = () => {
     if (!values.pay_visible || !values.pay_min) return null;

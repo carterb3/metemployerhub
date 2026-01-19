@@ -42,6 +42,7 @@ import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { JobEditorTabs } from "@/components/admin/jobs/JobEditorTabs";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { DeleteJobDialog } from "@/components/admin/jobs/DeleteJobDialog";
 import { JobStatusSelect } from "@/components/admin/jobs/JobStatusSelect";
 import { Input } from "@/components/ui/input";
@@ -75,6 +76,7 @@ export default function AdminJobsPage() {
   const updateStatus = useUpdateJobStatus();
 
   const handleEdit = (job: AdminJobFull) => {
+    console.log("Opening edit for job:", job);
     setSelectedJob(job);
     setFormOpen(true);
   };
@@ -338,10 +340,12 @@ export default function AdminJobsPage() {
       {/* Dialogs */}
       <Dialog open={formOpen} onOpenChange={setFormOpen}>
         <DialogContent className="max-w-5xl h-[90vh] p-0">
-          <JobEditorTabs
-            jobId={selectedJob?.id}
-            onClose={() => setFormOpen(false)}
-          />
+          <ErrorBoundary fallbackMessage="Something went wrong loading this job. Please try again or contact support if the issue persists.">
+            <JobEditorTabs
+              jobId={selectedJob?.id}
+              onClose={() => setFormOpen(false)}
+            />
+          </ErrorBoundary>
         </DialogContent>
       </Dialog>
       <DeleteJobDialog
