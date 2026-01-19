@@ -138,14 +138,17 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Employer</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value || ""}>
+                <Select 
+                  onValueChange={(val) => field.onChange(val === "_none_" ? "" : val)} 
+                  value={field.value || "_none_"}
+                >
                   <FormControl>
                     <SelectTrigger>
                       <SelectValue placeholder="Select employer (optional)" />
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="">No employer selected</SelectItem>
+                    <SelectItem value="_none_">No employer selected</SelectItem>
                     {employers.map((employer) => (
                       <SelectItem key={employer.id} value={employer.id}>
                         {employer.company_name}
