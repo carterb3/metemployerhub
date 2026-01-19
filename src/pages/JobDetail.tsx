@@ -24,6 +24,7 @@ import {
   isJobNew, 
   formatPostedDate 
 } from "@/hooks/useJobs";
+import { sanitizeHtml, isHtmlContent } from "@/lib/sanitize";
 
 export default function JobDetailPage() {
   const { id } = useParams<{ id: string }>();
@@ -159,10 +160,18 @@ export default function JobDetailPage() {
                 <h2 className="font-serif text-xl font-semibold text-foreground mb-4">
                   About This Role
                 </h2>
-                <div className="prose prose-slate max-w-none">
-                  <p className="text-muted-foreground whitespace-pre-wrap">
-                    {job.description}
-                  </p>
+                <div className="prose prose-slate dark:prose-invert max-w-none">
+                  {isHtmlContent(job.description) ? (
+                    <div
+                      dangerouslySetInnerHTML={{
+                        __html: sanitizeHtml(job.description),
+                      }}
+                    />
+                  ) : (
+                    <p className="text-muted-foreground whitespace-pre-wrap">
+                      {job.description}
+                    </p>
+                  )}
                 </div>
               </div>
 
