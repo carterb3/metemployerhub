@@ -46,13 +46,13 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   return (
     <SidebarProvider>
-      <div className="min-h-screen flex w-full">
+      <div className="h-screen flex w-full overflow-hidden">
         <AdminSidebar />
-        <SidebarInset className="flex-1">
-          <header className="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
+        <SidebarInset className="flex-1 flex flex-col overflow-hidden">
+          <header className="flex-shrink-0 sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-background px-4">
             <SidebarTrigger />
           </header>
-          <main className="flex-1 p-6">{children}</main>
+          <main className="flex-1 p-6 overflow-auto">{children}</main>
         </SidebarInset>
       </div>
     </SidebarProvider>

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { useAdminJobs, useUpdateJobStatus, useBulkUpdateJobs, useArchiveJob, useDuplicateJob, exportJobsToCSV } from "@/hooks/useAdminJobs";
 import type { AdminJobFull, JobStatus } from "@/types/jobs";
@@ -36,7 +36,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Dialog, DialogContent } from "@/components/ui/dialog";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink, Copy, Archive, Download } from "lucide-react";
+import { Search, Plus, Loader2, MoreHorizontal, Pencil, Trash2, ExternalLink, Copy, Archive, Download, X } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
@@ -61,6 +61,9 @@ export default function AdminJobsPage() {
   const [regionFilter, setRegionFilter] = useState<Region | "all">("all");
   const [categoryFilter, setCategoryFilter] = useState<Category | "all">("all");
 
+  // Selection state
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+
   // Dialog state
   const [formOpen, setFormOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -74,6 +77,53 @@ export default function AdminJobsPage() {
   });
 
   const updateStatus = useUpdateJobStatus();
+  const bulkUpdate = useBulkUpdateJobs();
+
+  // Selection helpers
+  const allSelected = useMemo(
+    () => jobs.length > 0 && jobs.every((job) => selectedIds.has(job.id)),
+    [jobs, selectedIds]
+  );
+
+  const someSelected = useMemo(
+    () => jobs.some((job) => selectedIds.has(job.id)) && !allSelected,
+    [jobs, selectedIds, allSelected]
+  );
+
+  const toggleSelectAll = () => {
+    if (allSelected) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(jobs.map((job) => job.id)));
+    }
+  };
+
+  const toggleSelect = (id: string) => {
+    const next = new Set(selectedIds);
+    if (next.has(id)) {
+      next.delete(id);
+    } else {
+      next.add(id);
+    }
+    setSelectedIds(next);
+  };
+
+  const clearSelection = () => setSelectedIds(new Set());
+
+  // Bulk actions
+  const handleBulkStatusChange = (status: JobStatus) => {
+    bulkUpdate.mutate(
+      { ids: Array.from(selectedIds), updates: { status } },
+      { onSuccess: clearSelection }
+    );
+  };
+
+  const handleExportCSV = () => {
+    const toExport = selectedIds.size > 0
+      ? jobs.filter((job) => selectedIds.has(job.id))
+      : jobs;
+    exportJobsToCSV(toExport);
+  };
 
   const handleEdit = (job: AdminJobFull) => {
     console.log("Opening edit for job:", job);
@@ -97,9 +147,9 @@ export default function AdminJobsPage() {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="flex flex-col h-[calc(100vh-3.5rem)] overflow-hidden">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div className="flex-shrink-0 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 pb-4">
           <div>
             <h1 className="font-serif text-3xl font-bold text-foreground">
               Job Listings
@@ -108,14 +158,20 @@ export default function AdminJobsPage() {
               Manage job postings for the public job board
             </p>
           </div>
-          <Button onClick={handleCreate}>
-            <Plus className="h-4 w-4 mr-2" />
-            New Job Posting
-          </Button>
+          <div className="flex items-center gap-2">
+            <Button variant="outline" onClick={handleExportCSV}>
+              <Download className="h-4 w-4 mr-2" />
+              Export CSV
+            </Button>
+            <Button onClick={handleCreate}>
+              <Plus className="h-4 w-4 mr-2" />
+              New Job Posting
+            </Button>
+          </div>
         </div>
 
         {/* Filters */}
-        <Card>
+        <Card className="flex-shrink-0">
           <CardHeader className="pb-3">
             <CardTitle className="text-lg">Filters</CardTitle>
             <CardDescription>Filter and search job listings</CardDescription>
@@ -192,9 +248,45 @@ export default function AdminJobsPage() {
           </CardContent>
         </Card>
 
+        {/* Bulk Actions Toolbar */}
+        {selectedIds.size > 0 && (
+          <div className="flex-shrink-0 flex items-center gap-3 bg-muted/50 border rounded-lg px-4 py-2 mt-4">
+            <span className="text-sm font-medium">
+              {selectedIds.size} selected
+            </span>
+            <div className="h-4 w-px bg-border" />
+            <Select onValueChange={(val) => handleBulkStatusChange(val as JobStatus)}>
+              <SelectTrigger className="w-[160px] h-8">
+                <SelectValue placeholder="Change status..." />
+              </SelectTrigger>
+              <SelectContent>
+                {Constants.public.Enums.job_status.map((status) => (
+                  <SelectItem key={status} value={status}>
+                    {status.charAt(0).toUpperCase() + status.slice(1)}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => {
+                exportJobsToCSV(jobs.filter((j) => selectedIds.has(j.id)));
+              }}
+            >
+              <Download className="h-4 w-4 mr-1" />
+              Export Selected
+            </Button>
+            <Button variant="ghost" size="sm" onClick={clearSelection}>
+              <X className="h-4 w-4 mr-1" />
+              Clear
+            </Button>
+          </div>
+        )}
+
         {/* Error State */}
         {error && (
-          <Card className="border-destructive">
+          <Card className="flex-shrink-0 border-destructive mt-4">
             <CardContent className="pt-6">
               <p className="text-destructive text-center">
                 Error loading jobs: {error.message}
@@ -203,9 +295,9 @@ export default function AdminJobsPage() {
           </Card>
         )}
 
-        {/* Jobs Table */}
-        <Card>
-          <CardContent className="p-0">
+        {/* Jobs Table - Scrollable */}
+        <Card className="flex-1 mt-4 flex flex-col overflow-hidden">
+          <CardContent className="p-0 flex-1 overflow-hidden">
             {isLoading ? (
               <div className="flex items-center justify-center py-12">
                 <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
@@ -221,10 +313,18 @@ export default function AdminJobsPage() {
                 </Button>
               </div>
             ) : (
-              <div className="overflow-x-auto">
+              <div className="overflow-auto h-full">
                 <Table>
-                  <TableHeader>
+                  <TableHeader className="sticky top-0 bg-background z-10">
                     <TableRow>
+                      <TableHead className="w-[50px]">
+                        <Checkbox
+                          checked={allSelected}
+                          onCheckedChange={toggleSelectAll}
+                          aria-label="Select all"
+                          className={someSelected ? "data-[state=checked]:bg-primary/50" : ""}
+                        />
+                      </TableHead>
                       <TableHead className="min-w-[200px]">Title</TableHead>
                       <TableHead>Company</TableHead>
                       <TableHead>Region</TableHead>
@@ -238,7 +338,17 @@ export default function AdminJobsPage() {
                   </TableHeader>
                   <TableBody>
                     {jobs.map((job) => (
-                      <TableRow key={job.id}>
+                      <TableRow
+                        key={job.id}
+                        className={selectedIds.has(job.id) ? "bg-muted/50" : ""}
+                      >
+                        <TableCell>
+                          <Checkbox
+                            checked={selectedIds.has(job.id)}
+                            onCheckedChange={() => toggleSelect(job.id)}
+                            aria-label={`Select ${job.title}`}
+                          />
+                        </TableCell>
                         <TableCell>
                           <div>
                             <p className="font-medium">{job.title}</p>
@@ -331,7 +441,7 @@ export default function AdminJobsPage() {
 
         {/* Summary */}
         {!isLoading && jobs.length > 0 && (
-          <p className="text-sm text-muted-foreground text-center">
+          <p className="flex-shrink-0 text-sm text-muted-foreground text-center py-2">
             Showing {jobs.length} job{jobs.length !== 1 ? "s" : ""}
           </p>
         )}
