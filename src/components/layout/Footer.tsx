@@ -15,7 +15,7 @@ const footerLinks = {
   ],
   about: [
     { name: "About MET", href: "/about" },
-    { name: "Regions & Contacts", href: "/regions" },
+    { name: "Contact Us", href: "/contact" },
     { name: "Privacy Policy", href: "/privacy" },
   ],
 };

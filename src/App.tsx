@@ -9,7 +9,7 @@ import JobDetail from "./pages/JobDetail";
 import Register from "./pages/Register";
 import Employers from "./pages/Employers";
 import Programs from "./pages/Programs";
-import Regions from "./pages/Regions";
+import Contact from "./pages/Contact";
 import NotFound from "./pages/NotFound";
 import Login from "./pages/Login";
 import AdminDashboard from "./pages/admin/Dashboard";
@@ -36,7 +36,7 @@ const App = () => (
           <Route path="/register" element={<Register />} />
           <Route path="/employers" element={<Employers />} />
           <Route path="/programs" element={<Programs />} />
-          <Route path="/regions" element={<Regions />} />
+          <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
           
           {/* Admin routes - protected by AdminLayout */}
