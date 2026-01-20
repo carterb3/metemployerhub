@@ -38,14 +38,18 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Download, Loader2, ExternalLink } from "lucide-react";
+import { Search, Download, Loader2, ExternalLink, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
+import { AttachmentPreviewCard } from "@/components/admin/inquiries/AttachmentPreviewCard";
 
 type InquiryStatus = Database["public"]["Enums"]["inquiry_status"];
 type Region = Database["public"]["Enums"]["manitoba_region"];
-type EmployerInquiry = Database["public"]["Tables"]["employer_inquiries"]["Row"];
+type EmployerInquiry = Database["public"]["Tables"]["employer_inquiries"]["Row"] & {
+  attachment_url?: string | null;
+  attachment_filename?: string | null;
+};
 
 const statusColors: Record<InquiryStatus, string> = {
   new: "bg-primary/10 text-primary border-primary/20",
@@ -211,6 +215,7 @@ export default function EmployerInquiriesPage() {
                     <TableHead>Status</TableHead>
                     <TableHead>Assigned To</TableHead>
                     <TableHead>Date</TableHead>
+                    <TableHead className="w-[50px]"></TableHead>
                     <TableHead className="w-[100px]">Actions</TableHead>
                   </TableRow>
                 </TableHeader>
@@ -305,10 +310,15 @@ export default function EmployerInquiriesPage() {
                         {format(new Date(inquiry.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell>
+                        {(inquiry as any).attachment_url && (
+                          <Paperclip className="h-4 w-4 text-muted-foreground" />
+                        )}
+                      </TableCell>
+                      <TableCell>
                         <Button
                           variant="ghost"
                           size="sm"
-                          onClick={() => setSelectedInquiry(inquiry)}
+                          onClick={() => setSelectedInquiry(inquiry as EmployerInquiry)}
                         >
                           View
                         </Button>
@@ -408,6 +418,18 @@ export default function EmployerInquiriesPage() {
                     <p className="text-foreground whitespace-pre-wrap bg-muted/50 p-3 rounded-lg">
                       {selectedInquiry.job_description}
                     </p>
+                  </div>
+                )}
+
+                {selectedInquiry.attachment_url && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-2">
+                      Attached File
+                    </p>
+                    <AttachmentPreviewCard
+                      attachmentUrl={selectedInquiry.attachment_url}
+                      attachmentFilename={selectedInquiry.attachment_filename || null}
+                    />
                   </div>
                 )}
               </div>
