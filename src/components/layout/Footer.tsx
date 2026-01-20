@@ -137,6 +137,12 @@ export function Footer() {
               >
                 Accessibility
               </Link>
+              <Link
+                to="/admin"
+                className="text-sm text-primary-foreground/60 hover:text-primary-foreground transition-colors"
+              >
+                Staff Login
+              </Link>
             </div>
           </div>
         </div>
