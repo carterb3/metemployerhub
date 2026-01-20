@@ -10,7 +10,7 @@ const navigation = [
   { name: "Get Help", href: "/register" },
   { name: "For Employers", href: "/employers" },
   { name: "Programs", href: "/programs" },
-  { name: "Regions", href: "/regions" },
+  { name: "Contact", href: "/contact" },
 ];
 
 export function Header() {

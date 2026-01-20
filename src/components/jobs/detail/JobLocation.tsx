@@ -70,18 +70,6 @@ export function JobLocation({ job }: JobLocationProps) {
         )}
 
         {/* Simple Map Placeholder */}
-        {job.city && (
-          <div className="mt-4 rounded-lg overflow-hidden border border-border bg-muted/50">
-            <div className="aspect-video flex items-center justify-center bg-gradient-to-br from-primary/5 to-primary/10">
-              <div className="text-center">
-                <MapPin className="h-8 w-8 text-primary/40 mx-auto mb-2" />
-                <p className="text-sm text-muted-foreground">
-                  {job.city}, {job.province || 'MB'}
-                </p>
-              </div>
-            </div>
-          </div>
-        )}
       </div>
     </section>
   );
