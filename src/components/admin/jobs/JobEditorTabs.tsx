@@ -278,8 +278,8 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full">
-        <div className={`flex-1 flex flex-col ${showActivityLog ? "pr-80" : ""}`}>
+      <form onSubmit={form.handleSubmit(onSubmit)} className="flex h-full overflow-hidden">
+        <div className={`flex-1 flex flex-col min-h-0 overflow-hidden ${showActivityLog ? "pr-80" : ""}`}>
           {/* Header */}
           <div className="flex items-center justify-between border-b px-6 py-4">
             <div>
@@ -344,7 +344,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
           </div>
 
           {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col">
+          <Tabs value={activeTab} onValueChange={setActiveTab} className="flex-1 flex flex-col min-h-0 overflow-hidden">
             <div className="border-b px-6">
               <TabsList className="h-12 bg-transparent">
                 <TabsTrigger value="details" className="data-[state=active]:bg-background">
