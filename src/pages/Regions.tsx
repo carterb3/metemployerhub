@@ -91,7 +91,7 @@ export default function RegionsPage() {
       <section className="bg-primary py-12 sm:py-16">
         <div className="container-mobile">
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-primary-foreground mb-4">
-            Regional Offices & Contacts
+            Contact Us
           </h1>
           <p className="text-lg text-primary-foreground/80 max-w-2xl">
             MET has offices across Manitoba to serve Red River Métis job seekers and
