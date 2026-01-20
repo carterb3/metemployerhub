@@ -461,7 +461,7 @@ export default function JobsPage() {
         <title>Job Listings | Métis Employment & Training</title>
         <meta 
           name="description" 
-          content="Browse job opportunities across Manitoba for Red River Métis job seekers. Find full-time, part-time, contract, and training positions from employers who value Métis talent." 
+          content="Browse job opportunities across Manitoba for Red River Métis job seekers. Find full-time, part-time, contract, and training positions from employers who value Red River Métis talent." 
         />
         <meta property="og:title" content="Job Listings | Métis Employment & Training" />
         <meta property="og:description" content="Find your next career opportunity with MET. Browse hundreds of jobs from employers across Manitoba." />

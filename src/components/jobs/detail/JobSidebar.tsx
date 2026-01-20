@@ -226,7 +226,7 @@ export function JobSidebar({ job }: JobSidebarProps) {
                 MMF Resources
               </p>
               <p className="text-xs text-muted-foreground">
-                Métis Federation info
+                Red River Métis resources
               </p>
             </div>
           </a>

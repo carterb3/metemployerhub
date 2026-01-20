@@ -36,7 +36,7 @@ export function WhyMET() {
             Why Work with MET?
           </h2>
           <p className="text-muted-foreground max-w-2xl mx-auto">
-            For over 20 years, we've helped Métis citizens find meaningful
+            For over 20 years, we've helped Red River Métis citizens find meaningful
             employment and build lasting careers.
           </p>
         </div>
