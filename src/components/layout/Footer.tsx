@@ -94,19 +94,11 @@ export function Footer() {
             <ul className="space-y-3">
               <li className="flex items-start gap-2 text-sm text-primary-foreground/70">
                 <Phone className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>1-800-XXX-XXXX</span>
+                <span>204-586-8474 ext. 2731</span>
               </li>
               <li className="flex items-start gap-2 text-sm text-primary-foreground/70">
                 <Mail className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>employment@mmf.mb.ca</span>
-              </li>
-              <li className="flex items-start gap-2 text-sm text-primary-foreground/70">
-                <MapPin className="h-4 w-4 mt-0.5 shrink-0" />
-                <span>
-                  150 Henry Avenue
-                  <br />
-                  Winnipeg, MB R3B 0J7
-                </span>
+                <span>MET@mmf.mb.ca</span>
               </li>
             </ul>
           </div>
