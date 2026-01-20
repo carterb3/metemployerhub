@@ -68,7 +68,7 @@ export default function RegionsPage() {
             Regional Offices & Contacts
           </h1>
           <p className="text-lg text-primary-foreground/80 max-w-2xl">
-            MET has offices across Manitoba to serve Métis job seekers and
+            MET has offices across Manitoba to serve Red River Métis job seekers and
             employers in every region.
           </p>
         </div>

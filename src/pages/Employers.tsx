@@ -30,7 +30,7 @@ import { useToast } from "@/hooks/use-toast";
 const benefits = [
   {
     icon: Users,
-    title: "Access Métis Talent",
+    title: "Access Red River Métis Talent",
     description:
       "Connect with a diverse pool of skilled, motivated candidates across Manitoba.",
   },
@@ -234,7 +234,7 @@ export default function EmployersPage() {
               Partner with MET to Build Your Team
             </h1>
             <p className="text-lg sm:text-xl text-primary-foreground/85 mb-8">
-              Connect with skilled Métis job seekers and access free recruitment
+              Connect with skilled Red River Métis job seekers and access free recruitment
               support, training subsidies, and more.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">

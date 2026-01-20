@@ -68,7 +68,7 @@ export default function IntakesPage() {
       "Employment Status",
       "Is Youth",
       "Has Barriers",
-      "Self-Identifies Métis",
+      "Self-Identifies Red River Métis",
       "MMF Citizenship Number",
     ];
 

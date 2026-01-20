@@ -29,7 +29,7 @@ const pathways = [
     icon: Building2,
     title: "For Employers",
     description:
-      "Post job opportunities and access our network of qualified Métis candidates ready to work.",
+      "Post job opportunities and access our network of qualified Red River Métis candidates ready to work.",
     href: "/employers",
     color: "success" as const,
   },
