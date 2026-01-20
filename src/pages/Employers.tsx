@@ -1,3 +1,4 @@
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   Building2,
@@ -7,6 +8,9 @@ import {
   ArrowRight,
   Phone,
   Mail,
+  Upload,
+  X,
+  Loader2,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -20,6 +24,8 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 const benefits = [
   {
@@ -51,7 +57,167 @@ const services = [
   "Recruitment event participation",
 ];
 
+const ACCEPTED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+  "text/plain",
+];
+
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
+
 export default function EmployersPage() {
+  const { toast } = useToast();
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  
+  const [formData, setFormData] = useState({
+    companyName: "",
+    contactName: "",
+    email: "",
+    phone: "",
+    inquiryType: "",
+    message: "",
+  });
+  const [file, setFile] = useState<File | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+
+  const handleInputChange = (
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+  ) => {
+    const { id, value } = e.target;
+    setFormData((prev) => ({ ...prev, [id]: value }));
+  };
+
+  const handleSelectChange = (value: string) => {
+    setFormData((prev) => ({ ...prev, inquiryType: value }));
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const selectedFile = e.target.files?.[0];
+    if (!selectedFile) return;
+
+    if (!ACCEPTED_FILE_TYPES.includes(selectedFile.type)) {
+      toast({
+        title: "Invalid file type",
+        description: "Please upload a PDF, Word document, or text file.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (selectedFile.size > MAX_FILE_SIZE) {
+      toast({
+        title: "File too large",
+        description: "Please upload a file smaller than 10MB.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setFile(selectedFile);
+  };
+
+  const removeFile = () => {
+    setFile(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = "";
+    }
+  };
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate required fields
+    if (!formData.companyName || !formData.contactName || !formData.email || !formData.phone || !formData.inquiryType) {
+      toast({
+        title: "Missing required fields",
+        description: "Please fill in all required fields.",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let attachmentUrl: string | null = null;
+      let attachmentFilename: string | null = null;
+
+      // Upload file if provided
+      if (file) {
+        const fileExt = file.name.split(".").pop();
+        const fileName = `${Date.now()}-${Math.random().toString(36).substring(7)}.${fileExt}`;
+        const filePath = `inquiries/${fileName}`;
+
+        const { error: uploadError } = await supabase.storage
+          .from("employer-inquiry-attachments")
+          .upload(filePath, file);
+
+        if (uploadError) {
+          throw new Error("Failed to upload file: " + uploadError.message);
+        }
+
+        attachmentUrl = filePath;
+        attachmentFilename = file.name;
+      }
+
+      // Map inquiry type to enum value
+      const inquiryTypeMap: Record<string, string> = {
+        "post-job": "job_posting",
+        "find-candidates": "candidate_request",
+        "wage-subsidy": "general",
+        "partnership": "partnership",
+        "other": "general",
+      };
+
+      // Submit form data
+      const { error: insertError } = await supabase
+        .from("employer_inquiries")
+        .insert({
+          company_name: formData.companyName,
+          contact_name: formData.contactName,
+          contact_email: formData.email,
+          contact_phone: formData.phone,
+          inquiry_type: inquiryTypeMap[formData.inquiryType] || "general",
+          message: formData.message || "No additional message provided.",
+          attachment_url: attachmentUrl,
+          attachment_filename: attachmentFilename,
+        } as any);
+
+      if (insertError) {
+        throw new Error("Failed to submit inquiry: " + insertError.message);
+      }
+
+      toast({
+        title: "Inquiry Submitted!",
+        description: "We'll respond within 1-2 business days.",
+      });
+
+      // Reset form
+      setFormData({
+        companyName: "",
+        contactName: "",
+        email: "",
+        phone: "",
+        inquiryType: "",
+        message: "",
+      });
+      setFile(null);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    } catch (error: any) {
+      console.error("Form submission error:", error);
+      toast({
+        title: "Submission Failed",
+        description: error.message || "Please try again later.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   return (
     <Layout>
       {/* Hero */}
@@ -149,32 +315,58 @@ export default function EmployersPage() {
               <h3 className="font-serif text-xl font-bold text-foreground mb-6">
                 Post a Job or Get in Touch
               </h3>
-              <form className="space-y-5">
+              <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
                     <Label htmlFor="companyName">Company Name *</Label>
-                    <Input id="companyName" className="mt-1.5" />
+                    <Input 
+                      id="companyName" 
+                      className="mt-1.5" 
+                      value={formData.companyName}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div>
                     <Label htmlFor="contactName">Contact Name *</Label>
-                    <Input id="contactName" className="mt-1.5" />
+                    <Input 
+                      id="contactName" 
+                      className="mt-1.5" 
+                      value={formData.contactName}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
-                    <Label htmlFor="employerEmail">Email *</Label>
-                    <Input id="employerEmail" type="email" className="mt-1.5" />
+                    <Label htmlFor="email">Email *</Label>
+                    <Input 
+                      id="email" 
+                      type="email" 
+                      className="mt-1.5" 
+                      value={formData.email}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                   <div>
-                    <Label htmlFor="employerPhone">Phone *</Label>
-                    <Input id="employerPhone" type="tel" className="mt-1.5" />
+                    <Label htmlFor="phone">Phone *</Label>
+                    <Input 
+                      id="phone" 
+                      type="tel" 
+                      className="mt-1.5" 
+                      value={formData.phone}
+                      onChange={handleInputChange}
+                      required
+                    />
                   </div>
                 </div>
 
                 <div>
                   <Label htmlFor="inquiryType">What can we help with? *</Label>
-                  <Select>
+                  <Select value={formData.inquiryType} onValueChange={handleSelectChange}>
                     <SelectTrigger className="mt-1.5">
                       <SelectValue placeholder="Select an option" />
                     </SelectTrigger>
@@ -194,6 +386,55 @@ export default function EmployersPage() {
                   </Select>
                 </div>
 
+                {/* File Upload */}
+                <div>
+                  <Label>Upload Job Description (optional)</Label>
+                  <div className="mt-1.5">
+                    {!file ? (
+                      <div 
+                        className="border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 hover:bg-muted/50 transition-colors"
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-8 w-8 mx-auto text-muted-foreground mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          Click to upload or drag and drop
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PDF, Word, or text file (max 10MB)
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,.txt"
+                          onChange={handleFileChange}
+                        />
+                      </div>
+                    ) : (
+                      <div className="flex items-center justify-between p-3 bg-muted/50 rounded-lg border border-border">
+                        <div className="flex items-center gap-3 min-w-0">
+                          <FileText className="h-5 w-5 text-primary shrink-0" />
+                          <span className="text-sm font-medium truncate">
+                            {file.name}
+                          </span>
+                          <span className="text-xs text-muted-foreground shrink-0">
+                            ({(file.size / 1024 / 1024).toFixed(2)} MB)
+                          </span>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={removeFile}
+                          className="shrink-0"
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
                 <div>
                   <Label htmlFor="message">Tell us more</Label>
                   <Textarea
@@ -201,12 +442,29 @@ export default function EmployersPage() {
                     className="mt-1.5"
                     rows={4}
                     placeholder="Describe the position, number of openings, or any questions..."
+                    value={formData.message}
+                    onChange={handleInputChange}
                   />
                 </div>
 
-                <Button variant="accent" className="w-full" size="lg">
-                  Submit Inquiry
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                <Button 
+                  variant="accent" 
+                  className="w-full" 
+                  size="lg"
+                  type="submit"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Inquiry
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </>
+                  )}
                 </Button>
 
                 <p className="text-xs text-muted-foreground text-center">
@@ -231,21 +489,21 @@ export default function EmployersPage() {
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <a
-                href="tel:1-800-XXX-XXXX"
+                href="tel:204-586-8474"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
                 <Phone className="h-5 w-5 text-primary" />
                 <span className="font-medium text-foreground">
-                  1-800-XXX-XXXX
+                  204-586-8474 ext. 2731
                 </span>
               </a>
               <a
-                href="mailto:employers@mmf.mb.ca"
+                href="mailto:MET@mmf.mb.ca"
                 className="inline-flex items-center justify-center gap-2 px-6 py-3 rounded-lg bg-secondary hover:bg-secondary/80 transition-colors"
               >
                 <Mail className="h-5 w-5 text-primary" />
                 <span className="font-medium text-foreground">
-                  employers@mmf.mb.ca
+                  MET@mmf.mb.ca
                 </span>
               </a>
             </div>
