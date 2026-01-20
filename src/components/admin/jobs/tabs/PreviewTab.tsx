@@ -9,13 +9,11 @@ import type { Tag } from "@/types/jobs";
 
 interface PreviewTabProps {
   form: UseFormReturn<any>;
-  employers: Array<{ id: string; company_name: string }>;
   tags: Tag[];
 }
 
-export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
+export function PreviewTab({ form, tags }: PreviewTabProps) {
   const values = form.watch();
-  const employer = (employers ?? []).find((e) => e.id === values.employer_id);
   const selectedTags = (tags ?? []).filter((t) => values.tags?.includes(t.id));
 
   const formatPay = () => {
@@ -67,10 +65,10 @@ export function PreviewTab({ form, employers, tags }: PreviewTabProps) {
               {values.title || "Job Title"}
             </CardTitle>
 
-            {employer && (
+            {values.employer_name && (
               <div className="flex items-center gap-2 text-muted-foreground">
                 <Building2 className="h-4 w-4" />
-                <span>{employer.company_name}</span>
+                <span>{values.employer_name}</span>
               </div>
             )}
           </div>

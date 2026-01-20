@@ -18,6 +18,7 @@ export type JobAction = "create" | "update" | "status_change" | "publish" | "unp
 export interface AdminJobFull {
   id: string;
   employer_id: string | null;
+  employer_name: string | null;
   title: string;
   description: string;
   requirements: string | null;
@@ -192,7 +193,7 @@ export interface JobFormData {
   province: string;
   address: string;
   postal_code: string;
-  employer_id: string;
+  employer_name: string;
   application_method: ApplicationMethod;
   apply_url: string;
   apply_email: string;
