@@ -2,6 +2,7 @@ import { useState } from "react";
 import { MapPin, Phone, Mail, Clock } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { RegionsMap, type RegionLocation } from "@/components/regions/RegionsMap";
+import { PostalCodeFinder } from "@/components/regions/PostalCodeFinder";
 import { cn } from "@/lib/utils";
 
 const regions: RegionLocation[] = [
@@ -99,7 +100,7 @@ export default function RegionsPage() {
         </div>
       </section>
 
-      {/* Interactive Map */}
+      {/* Find My Region + Interactive Map */}
       <section className="section-padding bg-secondary/30">
         <div className="container-mobile">
           <div className="text-center mb-8">
@@ -107,9 +108,19 @@ export default function RegionsPage() {
               Find Your Nearest Office
             </h2>
             <p className="text-muted-foreground">
-              Click on a marker or region card to view office details
+              Enter your postal code or click on the map to find your regional office
             </p>
           </div>
+          
+          {/* Postal Code Finder */}
+          <div className="max-w-md mx-auto mb-8">
+            <PostalCodeFinder
+              locations={regions}
+              onRegionFound={(regionName) => setSelectedRegion(regionName)}
+            />
+          </div>
+
+          {/* Map */}
           <div className="h-[400px] sm:h-[500px] max-w-5xl mx-auto">
             <RegionsMap
               locations={regions}
