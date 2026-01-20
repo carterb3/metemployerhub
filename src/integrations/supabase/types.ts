@@ -52,6 +52,8 @@ export type Database = {
       employer_inquiries: {
         Row: {
           assigned_to: string | null
+          attachment_filename: string | null
+          attachment_url: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -71,6 +73,8 @@ export type Database = {
         }
         Insert: {
           assigned_to?: string | null
+          attachment_filename?: string | null
+          attachment_url?: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -92,6 +96,8 @@ export type Database = {
         }
         Update: {
           assigned_to?: string | null
+          attachment_filename?: string | null
+          attachment_url?: string | null
           company_name?: string
           contact_email?: string
           contact_name?: string
