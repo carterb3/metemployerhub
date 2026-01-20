@@ -17,6 +17,8 @@ import AdminIntakes from "./pages/admin/Intakes";
 import IntakeDetail from "./pages/admin/IntakeDetail";
 import AdminEmployerInquiries from "./pages/admin/EmployerInquiries";
 import AdminJobs from "./pages/admin/AdminJobs";
+import EmployerCRM from "./pages/admin/EmployerCRM";
+import EmployerDetail from "./pages/admin/EmployerDetail";
 
 const queryClient = new QueryClient();
 
@@ -41,7 +43,9 @@ const App = () => (
           <Route path="/admin" element={<AdminDashboard />} />
           <Route path="/admin/intakes" element={<AdminIntakes />} />
           <Route path="/admin/intakes/:id" element={<IntakeDetail />} />
-          <Route path="/admin/employers" element={<AdminEmployerInquiries />} />
+          <Route path="/admin/inquiries" element={<AdminEmployerInquiries />} />
+          <Route path="/admin/employers" element={<EmployerCRM />} />
+          <Route path="/admin/employers/:id" element={<EmployerDetail />} />
           <Route path="/admin/jobs" element={<AdminJobs />} />
           
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

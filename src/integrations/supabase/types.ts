@@ -49,6 +49,50 @@ export type Database = {
           },
         ]
       }
+      employer_communications: {
+        Row: {
+          communication_date: string
+          communication_type: string
+          created_at: string
+          created_by: string | null
+          employer_id: string
+          follow_up_date: string | null
+          id: string
+          notes: string
+          subject: string | null
+        }
+        Insert: {
+          communication_date?: string
+          communication_type: string
+          created_at?: string
+          created_by?: string | null
+          employer_id: string
+          follow_up_date?: string | null
+          id?: string
+          notes: string
+          subject?: string | null
+        }
+        Update: {
+          communication_date?: string
+          communication_type?: string
+          created_at?: string
+          created_by?: string | null
+          employer_id?: string
+          follow_up_date?: string | null
+          id?: string
+          notes?: string
+          subject?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "employer_communications_employer_id_fkey"
+            columns: ["employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       employer_inquiries: {
         Row: {
           assigned_to: string | null
@@ -58,6 +102,9 @@ export type Database = {
           contact_email: string
           contact_name: string
           contact_phone: string | null
+          converted_at: string | null
+          converted_by: string | null
+          converted_to_employer_id: string | null
           created_at: string
           employment_type: Database["public"]["Enums"]["employment_type"] | null
           id: string
@@ -79,6 +126,9 @@ export type Database = {
           contact_email: string
           contact_name: string
           contact_phone?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_to_employer_id?: string | null
           created_at?: string
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
@@ -102,6 +152,9 @@ export type Database = {
           contact_email?: string
           contact_name?: string
           contact_phone?: string | null
+          converted_at?: string | null
+          converted_by?: string | null
+          converted_to_employer_id?: string | null
           created_at?: string
           employment_type?:
             | Database["public"]["Enums"]["employment_type"]
@@ -117,7 +170,15 @@ export type Database = {
           updated_at?: string
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "employer_inquiries_converted_to_employer_id_fkey"
+            columns: ["converted_to_employer_id"]
+            isOneToOne: false
+            referencedRelation: "employers"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       employers: {
         Row: {
@@ -129,6 +190,9 @@ export type Database = {
           id: string
           industry: string | null
           is_partner: boolean | null
+          notes: string | null
+          source_inquiry_id: string | null
+          status: string
           updated_at: string
           user_id: string | null
           website: string | null
@@ -142,6 +206,9 @@ export type Database = {
           id?: string
           industry?: string | null
           is_partner?: boolean | null
+          notes?: string | null
+          source_inquiry_id?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
           website?: string | null
@@ -155,11 +222,22 @@ export type Database = {
           id?: string
           industry?: string | null
           is_partner?: boolean | null
+          notes?: string | null
+          source_inquiry_id?: string | null
+          status?: string
           updated_at?: string
           user_id?: string | null
           website?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "employers_source_inquiry_id_fkey"
+            columns: ["source_inquiry_id"]
+            isOneToOne: false
+            referencedRelation: "employer_inquiries"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       intake_notes: {
         Row: {

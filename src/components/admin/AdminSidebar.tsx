@@ -1,4 +1,4 @@
-import { Users, Building2, Briefcase, LogOut, LayoutDashboard, FileText } from "lucide-react";
+import { Users, Building2, Briefcase, LogOut, LayoutDashboard, FileText, MessageSquare } from "lucide-react";
 import { NavLink } from "@/components/NavLink";
 import { useLocation } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -21,7 +21,8 @@ import logo from "@/assets/logo.png";
 const navigation = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
   { title: "Job Seeker Intakes", url: "/admin/intakes", icon: Users },
-  { title: "Employer Inquiries", url: "/admin/employers", icon: Building2 },
+  { title: "Employer Inquiries", url: "/admin/inquiries", icon: MessageSquare },
+  { title: "Employer CRM", url: "/admin/employers", icon: Building2 },
   { title: "Job Listings", url: "/admin/jobs", icon: Briefcase },
 ];
 
