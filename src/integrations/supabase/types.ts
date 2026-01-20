@@ -412,6 +412,7 @@ export type Database = {
           created_by: string | null
           description: string
           employer_id: string | null
+          employer_name: string | null
           employment_type: Database["public"]["Enums"]["employment_type"]
           expires_at: string | null
           external_id: string | null
@@ -459,6 +460,7 @@ export type Database = {
           created_by?: string | null
           description: string
           employer_id?: string | null
+          employer_name?: string | null
           employment_type: Database["public"]["Enums"]["employment_type"]
           expires_at?: string | null
           external_id?: string | null
@@ -506,6 +508,7 @@ export type Database = {
           created_by?: string | null
           description?: string
           employer_id?: string | null
+          employer_name?: string | null
           employment_type?: Database["public"]["Enums"]["employment_type"]
           expires_at?: string | null
           external_id?: string | null

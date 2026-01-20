@@ -9,7 +9,7 @@ import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
 import { Separator } from "@/components/ui/separator";
 import { Loader2, Save, Eye, Copy, FileText, MapPin, DollarSign, Send, Tags, Paperclip, History, AlertTriangle } from "lucide-react";
-import { useCreateJob, useUpdateJob, useEmployers, useDuplicateJob, useAdminJob, useTags, useCreateTag } from "@/hooks/useAdminJobs";
+import { useCreateJob, useUpdateJob, useDuplicateJob, useAdminJob, useTags, useCreateTag } from "@/hooks/useAdminJobs";
 import { regionLabels, categoryLabels, employmentTypeLabels } from "@/hooks/useJobs";
 import { Constants } from "@/integrations/supabase/types";
 import type { AdminJobFull, JobFormData, LocationType, ApplicationMethod, PayPeriod } from "@/types/jobs";
@@ -37,7 +37,7 @@ const jobFormSchema = z.object({
   province: z.string().default("MB"),
   address: z.string().optional(),
   postal_code: z.string().optional(),
-  employer_id: z.string().optional(),
+  employer_name: z.string().optional(),
   application_method: z.string().default("apply_url"),
   apply_url: z.string().url("Must be a valid URL").optional().or(z.literal("")),
   apply_email: z.string().email("Must be a valid email").optional().or(z.literal("")),
@@ -73,7 +73,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
   const [loadError, setLoadError] = useState<string | null>(null);
 
   const { data: job, isLoading: jobLoading, error: jobError } = useAdminJob(jobId || null);
-  const { data: employers = [] } = useEmployers();
+  
   const { data: tags = [] } = useTags();
   const createTag = useCreateTag();
   const createJob = useCreateJob();
@@ -107,7 +107,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
       province: "MB",
       address: "",
       postal_code: "",
-      employer_id: "",
+      employer_name: "",
       application_method: "apply_url",
       apply_url: "",
       apply_email: "",
@@ -146,7 +146,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
           province: job?.province || "MB",
           address: job?.address || "",
           postal_code: job?.postal_code || "",
-          employer_id: job?.employer_id || "",
+          employer_name: job?.employer_name || "",
           application_method: job?.application_method || "apply_url",
           apply_url: job?.apply_url || "",
           apply_email: job?.apply_email || "",
@@ -186,7 +186,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
       province: values.province,
       address: values.address || null,
       postal_code: values.postal_code || null,
-      employer_id: values.employer_id || null,
+      employer_name: values.employer_name || null,
       application_method: values.application_method as ApplicationMethod,
       apply_url: values.apply_url || null,
       apply_email: values.apply_email || null,
@@ -377,7 +377,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
             <ScrollArea className="flex-1">
               <div className="p-6">
                 <TabsContent value="details" className="mt-0">
-                  <DetailsTab form={form} employers={employers ?? []} />
+                  <DetailsTab form={form} />
                 </TabsContent>
 
                 <TabsContent value="location" className="mt-0">
@@ -403,7 +403,7 @@ export function JobEditorTabs({ jobId, onClose, onSaved }: JobEditorTabsProps) {
                 </TabsContent>
 
                 <TabsContent value="preview" className="mt-0">
-                  <PreviewTab form={form} employers={employers ?? []} tags={tags ?? []} />
+                  <PreviewTab form={form} tags={tags ?? []} />
                 </TabsContent>
               </div>
             </ScrollArea>

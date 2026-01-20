@@ -30,10 +30,9 @@ const listingTypeLabels: Record<string, string> = {
 
 interface DetailsTabProps {
   form: UseFormReturn<any>;
-  employers: Array<{ id: string; company_name: string }>;
 }
 
-export function DetailsTab({ form, employers }: DetailsTabProps) {
+export function DetailsTab({ form }: DetailsTabProps) {
   return (
     <div className="space-y-6">
       <Card>
@@ -134,28 +133,13 @@ export function DetailsTab({ form, employers }: DetailsTabProps) {
 
           <FormField
             control={form.control}
-            name="employer_id"
+            name="employer_name"
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Employer</FormLabel>
-                <Select 
-                  onValueChange={(val) => field.onChange(val === "_none_" ? "" : val)} 
-                  value={field.value || "_none_"}
-                >
-                  <FormControl>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select employer (optional)" />
-                    </SelectTrigger>
-                  </FormControl>
-                  <SelectContent>
-                    <SelectItem value="_none_">No employer selected</SelectItem>
-                    {employers.map((employer) => (
-                      <SelectItem key={employer.id} value={employer.id}>
-                        {employer.company_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <FormControl>
+                  <Input placeholder="e.g. Manitoba Métis Federation" {...field} />
+                </FormControl>
                 <FormMessage />
               </FormItem>
             )}
