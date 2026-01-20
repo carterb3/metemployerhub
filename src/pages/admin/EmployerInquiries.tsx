@@ -43,6 +43,12 @@ import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
 import { AttachmentPreviewCard } from "@/components/admin/inquiries/AttachmentPreviewCard";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 type InquiryStatus = Database["public"]["Enums"]["inquiry_status"];
 type Region = Database["public"]["Enums"]["manitoba_region"];
@@ -311,7 +317,16 @@ export default function EmployerInquiriesPage() {
                       </TableCell>
                       <TableCell>
                         {(inquiry as any).attachment_url && (
-                          <Paperclip className="h-4 w-4 text-muted-foreground" />
+                          <TooltipProvider>
+                            <Tooltip>
+                              <TooltipTrigger asChild>
+                                <Paperclip className="h-4 w-4 text-muted-foreground cursor-help" />
+                              </TooltipTrigger>
+                              <TooltipContent>
+                                <p>{(inquiry as any).attachment_filename || "Attachment"}</p>
+                              </TooltipContent>
+                            </Tooltip>
+                          </TooltipProvider>
                         )}
                       </TableCell>
                       <TableCell>
