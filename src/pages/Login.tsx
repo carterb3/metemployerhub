@@ -43,7 +43,8 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      // Use generic error message to prevent user enumeration attacks
+      setError("Invalid email or password. Please try again.");
       setIsLoading(false);
     } else {
       navigate("/admin");
@@ -72,9 +73,11 @@ export default function LoginPage() {
     });
 
     if (error) {
-      setError(error.message);
+      // Use generic error message to prevent user enumeration attacks
+      setError("Unable to create account. Please try again or contact an administrator.");
     } else {
-      setSuccess("Account created! You can now sign in.");
+      // Use message that doesn't confirm account creation to prevent enumeration
+      setSuccess("If this email is valid and not already registered, you'll receive a confirmation.");
       setPassword("");
     }
     setIsLoading(false);
