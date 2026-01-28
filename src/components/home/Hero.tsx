@@ -107,27 +107,6 @@ export function Hero() {
               </Link>
             </Button>
           </div>
-
-          {/* Stats with glassmorphism */}
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-md">
-            {[
-              { value: "2,000+", label: "Employed Annually" },
-              { value: "200+", label: "Employer Partners" },
-            ].map((stat, index) => (
-              <div
-                key={stat.label}
-                className="bg-primary-foreground/5 backdrop-blur-sm rounded-xl border border-primary-foreground/10 p-4 text-center transition-all duration-300 hover:bg-primary-foreground/10"
-                style={{ animationDelay: `${index * 100}ms` }}
-              >
-                <p className="font-serif text-2xl sm:text-3xl font-bold text-primary-foreground">
-                  {stat.value}
-                </p>
-                <p className="text-xs sm:text-sm text-primary-foreground/70">
-                  {stat.label}
-                </p>
-              </div>
-            ))}
-          </div>
         </div>
       </div>
     </section>
