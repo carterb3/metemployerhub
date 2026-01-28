@@ -11,6 +11,7 @@ import {
   Upload,
   X,
   Loader2,
+  LogIn,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
+import { useEmployerAuth } from "@/hooks/useEmployerAuth";
 
 const benefits = [
   {
@@ -69,6 +71,7 @@ const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 export default function EmployersPage() {
   const { toast } = useToast();
   const fileInputRef = useRef<HTMLInputElement>(null);
+  const { user, employer, isEmployer, isApproved, isLoading: authLoading } = useEmployerAuth();
   
   const [formData, setFormData] = useState({
     companyName: "",
@@ -80,6 +83,7 @@ export default function EmployersPage() {
   });
   const [file, setFile] = useState<File | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   const handleInputChange = (
     e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
@@ -188,10 +192,8 @@ export default function EmployersPage() {
         throw new Error("Failed to submit inquiry: " + insertError.message);
       }
 
-      toast({
-        title: "Inquiry Submitted!",
-        description: "We'll respond within 1-2 business days.",
-      });
+      // Show success message
+      setShowSuccessMessage(true);
 
       // Reset form
       setFormData({
@@ -310,11 +312,62 @@ export default function EmployersPage() {
               </ul>
             </div>
 
-            {/* Post Job Form */}
+            {/* Post Job Form or Welcome Panel */}
             <div id="post-job" className="bg-card rounded-xl border border-border p-6 sm:p-8">
-              <h3 className="font-serif text-xl font-bold text-foreground mb-6">
-                Post a Job or Get in Touch
-              </h3>
+              {/* Show welcome panel for logged-in employers */}
+              {!authLoading && user && isEmployer && isApproved ? (
+                <div className="text-center space-y-6">
+                  <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center mx-auto">
+                    <Building2 className="h-8 w-8 text-primary" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-foreground mb-2">
+                      Welcome back, {employer?.company_name}!
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Access your employer dashboard to post jobs and manage your listings.
+                    </p>
+                  </div>
+                  <Button variant="accent" size="lg" className="w-full" asChild>
+                    <Link to="/employer/dashboard">
+                      Go to Employer Dashboard
+                      <ArrowRight className="ml-2 h-5 w-5" />
+                    </Link>
+                  </Button>
+                </div>
+              ) : showSuccessMessage ? (
+                <div className="text-center space-y-6">
+                  <div className="w-16 h-16 rounded-full bg-success/10 flex items-center justify-center mx-auto">
+                    <CheckCircle2 className="h-8 w-8 text-success" />
+                  </div>
+                  <div>
+                    <h3 className="font-serif text-xl font-bold text-foreground mb-2">
+                      Thank You!
+                    </h3>
+                    <p className="text-muted-foreground">
+                      Your inquiry has been submitted successfully. Our team will review it and contact you within 1-2 business days.
+                    </p>
+                  </div>
+                  <Button 
+                    variant="outline" 
+                    onClick={() => setShowSuccessMessage(false)}
+                  >
+                    Submit Another Inquiry
+                  </Button>
+                </div>
+              ) : (
+                <>
+                  <div className="flex items-center justify-between mb-6">
+                    <h3 className="font-serif text-xl font-bold text-foreground">
+                      Post a Job or Get in Touch
+                    </h3>
+                    <Button variant="ghost" size="sm" asChild>
+                      <Link to="/employer/login">
+                        <LogIn className="mr-2 h-4 w-4" />
+                        Employer Login
+                      </Link>
+                    </Button>
+                  </div>
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div className="grid sm:grid-cols-2 gap-4">
                   <div>
@@ -471,6 +524,8 @@ export default function EmployersPage() {
                   We'll respond within 1-2 business days.
                 </p>
               </form>
+                </>
+              )}
             </div>
           </div>
         </div>

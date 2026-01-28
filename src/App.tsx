@@ -20,6 +20,15 @@ import AdminJobs from "./pages/admin/AdminJobs";
 import EmployerCRM from "./pages/admin/EmployerCRM";
 import EmployerDetail from "./pages/admin/EmployerDetail";
 
+// Employer Portal
+import EmployerLogin from "./pages/employer/Login";
+import EmployerPending from "./pages/employer/Pending";
+import EmployerDashboard from "./pages/employer/Dashboard";
+import EmployerJobs from "./pages/employer/Jobs";
+import NewEmployerJob from "./pages/employer/NewJob";
+import EmployerProfile from "./pages/employer/Profile";
+import EmployerHelp from "./pages/employer/Help";
+
 const queryClient = new QueryClient();
 
 const App = () => (
@@ -38,6 +47,15 @@ const App = () => (
           <Route path="/programs" element={<Programs />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/login" element={<Login />} />
+          
+          {/* Employer Portal routes */}
+          <Route path="/employer/login" element={<EmployerLogin />} />
+          <Route path="/employer/pending" element={<EmployerPending />} />
+          <Route path="/employer/dashboard" element={<EmployerDashboard />} />
+          <Route path="/employer/jobs" element={<EmployerJobs />} />
+          <Route path="/employer/jobs/new" element={<NewEmployerJob />} />
+          <Route path="/employer/profile" element={<EmployerProfile />} />
+          <Route path="/employer/help" element={<EmployerHelp />} />
           
           {/* Admin routes - protected by AdminLayout */}
           <Route path="/admin" element={<AdminDashboard />} />

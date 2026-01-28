@@ -13,6 +13,8 @@ import {
   MessageSquare,
   Handshake,
   FileText,
+  UserPlus,
+  CheckCircle2,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -28,11 +30,13 @@ import {
 } from "@/hooks/useEmployerCRM";
 import { EmployerFormDialog } from "@/components/admin/employers/EmployerFormDialog";
 import { CommunicationFormDialog } from "@/components/admin/employers/CommunicationFormDialog";
+import { ApproveEmployerDialog } from "@/components/admin/employers/ApproveEmployerDialog";
 
 export default function EmployerDetail() {
   const { id } = useParams<{ id: string }>();
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showCommunicationDialog, setShowCommunicationDialog] = useState(false);
+  const [showApproveDialog, setShowApproveDialog] = useState(false);
 
   const { data: employer, isLoading: loadingEmployer } = useEmployer(id);
   const { data: communications, isLoading: loadingComms } = useEmployerCommunications(id);
@@ -105,10 +109,24 @@ export default function EmployerDetail() {
               </div>
             </div>
           </div>
-          <Button variant="outline" onClick={() => setShowEditDialog(true)}>
-            <Edit className="mr-2 h-4 w-4" />
-            Edit
-          </Button>
+          <div className="flex gap-2">
+            {!employer.user_id && (
+              <Button variant="accent" onClick={() => setShowApproveDialog(true)}>
+                <UserPlus className="mr-2 h-4 w-4" />
+                Create Account
+              </Button>
+            )}
+            {employer.user_id && (
+              <Badge variant="outline" className="flex items-center gap-1 py-1.5">
+                <CheckCircle2 className="h-3.5 w-3.5 text-success" />
+                Account Active
+              </Badge>
+            )}
+            <Button variant="outline" onClick={() => setShowEditDialog(true)}>
+              <Edit className="mr-2 h-4 w-4" />
+              Edit
+            </Button>
+          </div>
         </div>
 
         <div className="grid gap-6 lg:grid-cols-3">
@@ -315,6 +333,11 @@ export default function EmployerDetail() {
         open={showCommunicationDialog}
         onOpenChange={setShowCommunicationDialog}
         employerId={employer.id}
+      />
+      <ApproveEmployerDialog
+        open={showApproveDialog}
+        onOpenChange={setShowApproveDialog}
+        employer={employer}
       />
     </AdminLayout>
   );
