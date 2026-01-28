@@ -97,7 +97,7 @@ export function Hero() {
             <Button variant="hero-outline" size="lg" asChild className="group">
               <Link to="/register">
                 <Users className="h-5 w-5 mr-2" />
-                Create Profile
+                Create Employer Profile
               </Link>
             </Button>
             <Button variant="hero-outline" size="lg" asChild className="group">
