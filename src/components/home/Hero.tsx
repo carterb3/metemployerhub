@@ -109,11 +109,10 @@ export function Hero() {
           </div>
 
           {/* Stats with glassmorphism */}
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-md">
             {[
-              { value: "500+", label: "Active Jobs" },
-              { value: "2,000+", label: "Placements Made" },
-              { value: "150+", label: "Employer Partners" },
+              { value: "2,000+", label: "Employed Annually" },
+              { value: "200+", label: "Employer Partners" },
             ].map((stat, index) => (
               <div
                 key={stat.label}
