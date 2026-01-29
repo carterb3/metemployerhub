@@ -7,7 +7,6 @@ import logo from "@/assets/logo.png";
 
 const navigation = [
   { name: "Find a Job", href: "/jobs" },
-  { name: "Get Help", href: "/register" },
   { name: "For Employers", href: "/employers" },
   { name: "Programs", href: "/programs" },
   { name: "Contact", href: "/contact" },
@@ -55,7 +54,7 @@ export function Header() {
             <Link to="/employers">Post a Job</Link>
           </Button>
           <Button variant="accent" size="sm" asChild>
-            <Link to="/register">Register Now</Link>
+            <Link to="/contact">Get Support</Link>
           </Button>
         </div>
 
@@ -100,8 +99,8 @@ export function Header() {
                 </Link>
               </Button>
               <Button variant="accent" className="w-full" asChild>
-                <Link to="/register" onClick={() => setMobileMenuOpen(false)}>
-                  Register Now
+                <Link to="/contact" onClick={() => setMobileMenuOpen(false)}>
+                  Get Support
                 </Link>
               </Button>
             </div>
