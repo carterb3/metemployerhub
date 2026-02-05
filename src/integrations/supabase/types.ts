@@ -718,6 +718,17 @@ export type Database = {
       }
       is_employer: { Args: { _user_id: string }; Returns: boolean }
       is_staff_or_admin: { Args: { _user_id: string }; Returns: boolean }
+      setup_demo_employer: {
+        Args: {
+          p_company_name?: string
+          p_contact_name?: string
+          p_email: string
+        }
+        Returns: {
+          employer_id: string
+          message: string
+        }[]
+      }
     }
     Enums: {
       app_role: "admin" | "staff" | "user" | "employer"

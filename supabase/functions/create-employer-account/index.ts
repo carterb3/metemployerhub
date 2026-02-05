@@ -11,6 +11,7 @@ interface CreateEmployerAccountRequest {
   email: string;
   employerId: string;
   companyName: string;
+  setPassword?: string; // Optional: set a specific password for demo accounts
 }
 
 serve(async (req: Request) => {
@@ -70,7 +71,7 @@ serve(async (req: Request) => {
     }
 
     // Parse request body
-    const { email, employerId, companyName }: CreateEmployerAccountRequest = await req.json();
+    const { email, employerId, companyName, setPassword }: CreateEmployerAccountRequest = await req.json();
 
     if (!email || !employerId) {
       return new Response(
@@ -90,13 +91,21 @@ serve(async (req: Request) => {
     if (existingUser) {
       console.log("User already exists, linking to employer profile");
       newUserId = existingUser.id;
+      
+      // If setPassword is provided, update the user's password
+      if (setPassword) {
+        console.log("Updating password for existing user");
+        await adminClient.auth.admin.updateUserById(newUserId, {
+          password: setPassword,
+        });
+      }
     } else {
-      // Create a new user with a random password (they'll reset it)
-      const tempPassword = crypto.randomUUID() + "Aa1!";
+      // Create a new user with provided password or random password
+      const password = setPassword || (crypto.randomUUID() + "Aa1!");
       
       const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
         email,
-        password: tempPassword,
+        password: password,
         email_confirm: true,
         user_metadata: {
           company_name: companyName,
