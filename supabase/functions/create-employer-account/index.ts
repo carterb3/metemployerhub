@@ -1,27 +1,17 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
+import { createClient } from "npm:@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
+    "authorization, x-client-info, apikey, content-type",
 };
 
-interface CreateEmployerAccountRequest {
-  email: string;
-  employerId: string;
-  companyName: string;
-  setPassword?: string; // Optional: set a specific password for demo accounts
-}
-
-serve(async (req: Request) => {
-  // Handle CORS preflight
+Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") {
     return new Response("ok", { headers: corsHeaders });
   }
 
   try {
-    // Verify the calling user is a staff/admin
     const authHeader = req.headers.get("Authorization");
     if (!authHeader?.startsWith("Bearer ")) {
       return new Response(
@@ -30,48 +20,38 @@ serve(async (req: Request) => {
       );
     }
 
-    // Create Supabase client with user's token
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
-    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
 
-    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
-      global: { headers: { Authorization: authHeader } },
+    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { persistSession: false },
     });
 
-    // Verify the user's JWT
-    const token = authHeader.replace("Bearer ", "");
-    const { data: claims, error: claimsError } = await userClient.auth.getClaims(token);
-    
-    if (claimsError || !claims?.claims) {
-      console.error("JWT verification failed:", claimsError);
+    // Verify caller's JWT
+    const { data: { user: caller }, error: authError } = await adminClient.auth.getUser(
+      authHeader.replace("Bearer ", "")
+    );
+
+    if (authError || !caller) {
       return new Response(
         JSON.stringify({ error: "Unauthorized" }),
         { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    const userId = claims.claims.sub;
-
-    // Check if user is staff or admin using service client
-    const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { persistSession: false },
+    // Check if caller is staff/admin
+    const { data: isStaff } = await adminClient.rpc("is_staff_or_admin", {
+      _user_id: caller.id,
     });
 
-    const { data: isStaff, error: roleError } = await adminClient.rpc("is_staff_or_admin", {
-      _user_id: userId,
-    });
-
-    if (roleError || !isStaff) {
-      console.error("Role check failed:", roleError);
+    if (!isStaff) {
       return new Response(
         JSON.stringify({ error: "Insufficient permissions" }),
         { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Parse request body
-    const { email, employerId, companyName, setPassword }: CreateEmployerAccountRequest = await req.json();
+    const { email, employerId, companyName, setPassword } = await req.json();
 
     if (!email || !employerId) {
       return new Response(
@@ -80,109 +60,80 @@ serve(async (req: Request) => {
       );
     }
 
-    console.log(`Creating employer account for ${email}, employer ID: ${employerId}`);
+    console.log(`Creating employer account for ${email}`);
 
-    // Check if user already exists
-    const { data: existingUsers } = await adminClient.auth.admin.listUsers();
-    const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
+    // Try to create user first - if exists, will fail and we handle it
+    const password = setPassword || (crypto.randomUUID() + "Aa1!");
+    
+    const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
+      email,
+      password,
+      email_confirm: true,
+      user_metadata: { company_name: companyName, is_employer: true },
+    });
 
-    let newUserId: string;
+    let userId: string;
 
-    if (existingUser) {
-      console.log("User already exists, linking to employer profile");
-      newUserId = existingUser.id;
-      
-      // If setPassword is provided, update the user's password
-      if (setPassword) {
-        console.log("Updating password for existing user");
-        await adminClient.auth.admin.updateUserById(newUserId, {
-          password: setPassword,
-        });
-      }
-    } else {
-      // Create a new user with provided password or random password
-      const password = setPassword || (crypto.randomUUID() + "Aa1!");
-      
-      const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
-        email,
-        password: password,
-        email_confirm: true,
-        user_metadata: {
-          company_name: companyName,
-          is_employer: true,
-        },
-      });
+    if (createError?.message?.includes("already been registered")) {
+      // User exists - get their ID from profiles table
+      const { data: profile } = await adminClient
+        .from("profiles")
+        .select("user_id")
+        .eq("email", email.toLowerCase())
+        .single();
 
-      if (createError) {
-        console.error("Error creating user:", createError);
+      if (!profile?.user_id) {
         return new Response(
-          JSON.stringify({ error: createError.message }),
+          JSON.stringify({ error: "User exists but profile not found" }),
           { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
         );
       }
-
-      newUserId = newUser.user.id;
-      console.log("Created new user:", newUserId);
-    }
-
-    // Assign 'employer' role to the user
-    const { error: roleInsertError } = await adminClient
-      .from("user_roles")
-      .upsert(
-        { user_id: newUserId, role: "employer" },
-        { onConflict: "user_id,role" }
+      
+      userId = profile.user_id;
+      console.log("User already exists:", userId);
+    } else if (createError) {
+      return new Response(
+        JSON.stringify({ error: createError.message }),
+        { status: 400, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
-
-    if (roleInsertError) {
-      console.error("Error assigning employer role:", roleInsertError);
-      // Continue anyway - user might already have role
+    } else {
+      userId = newUser.user.id;
+      console.log("Created new user:", userId);
     }
 
-    // Link the employer record to the user
+    // Assign employer role
+    await adminClient.from("user_roles").upsert(
+      { user_id: userId, role: "employer" },
+      { onConflict: "user_id,role", ignoreDuplicates: true }
+    );
+
+    // Link employer record
     const { error: updateError } = await adminClient
       .from("employers")
-      .update({ user_id: newUserId, status: "active" })
+      .update({ user_id: userId, status: "active" })
       .eq("id", employerId);
 
     if (updateError) {
-      console.error("Error linking employer to user:", updateError);
       return new Response(
-        JSON.stringify({ error: "Failed to link employer to user account" }),
+        JSON.stringify({ error: "Failed to link employer" }),
         { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
-    // Send password reset email so they can set their password
-    const { error: resetError } = await adminClient.auth.admin.generateLink({
+    // Send password reset email
+    await adminClient.auth.admin.generateLink({
       type: "recovery",
       email,
-      options: {
-        redirectTo: `${req.headers.get("origin")}/employer/login`,
-      },
     });
 
-    if (resetError) {
-      console.error("Error sending password reset:", resetError);
-      // Don't fail - account was created successfully
-    }
-
-    console.log("Employer account created successfully");
-
     return new Response(
-      JSON.stringify({ 
-        success: true, 
-        userId: newUserId,
-        message: "Employer account created. Password reset email sent."
-      }),
-      { 
-        status: 200, 
-        headers: { ...corsHeaders, "Content-Type": "application/json" } 
-      }
+      JSON.stringify({ success: true, userId }),
+      { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
-  } catch (error: any) {
-    console.error("Unexpected error:", error);
+  } catch (error) {
+    console.error("Error:", error);
     return new Response(
-      JSON.stringify({ error: error.message || "Internal server error" }),
+      JSON.stringify({ error: "Internal server error" }),
       { status: 500, headers: { ...corsHeaders, "Content-Type": "application/json" } }
     );
   }
