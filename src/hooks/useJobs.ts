@@ -17,17 +17,8 @@ export type JobFilters = {
   employmentType?: string;
 };
 
-// Map database enum values to display labels
-export const regionLabels: Record<string, string> = {
-  interlake: "Interlake",
-  northwest: "Northwest",
-  southeast: "Southeast",
-  southwest: "Southwest",
-  winnipeg: "Winnipeg",
-  the_pas: "The Pas",
-  thompson: "Thompson",
-  beyond_borders: "Beyond Borders",
-};
+// Re-export region labels from shared utility
+export { REGION_LABELS as regionLabels, formatRegion } from "@/lib/regions";
 
 export const categoryLabels: Record<string, string> = {
   administration: "Administration",

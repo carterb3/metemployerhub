@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
+import { formatRegion } from "@/lib/regions";
 import {
   FileText,
   PlusCircle,
@@ -169,7 +170,7 @@ export default function EmployerJobs() {
                           {format(new Date(job.created_at), "MMM d, yyyy")}
                         </TableCell>
                         <TableCell className="text-muted-foreground">
-                          {job.city || job.region.replace("_", " ")}
+                          {job.city || formatRegion(job.region)}
                         </TableCell>
                         <TableCell className="text-right">
                           <div className="flex items-center justify-end gap-2">

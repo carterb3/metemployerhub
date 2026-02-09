@@ -46,6 +46,8 @@ const regionToEnum: Record<string, ManitobaRegion> = {
   "Interlake": "interlake",
   "Northwest (Dauphin area)": "northwest",
   "The Pas & Northern": "the_pas",
+  "Thompson": "thompson",
+  "Beyond Borders": "beyond_borders",
 };
 
 const contactMethodToPreference = (methods: string[]): Database["public"]["Enums"]["contact_preference"] => {
@@ -79,6 +81,8 @@ const regions = [
   "Interlake",
   "Northwest (Dauphin area)",
   "The Pas & Northern",
+  "Thompson",
+  "Beyond Borders",
 ];
 
 const employmentStatuses = [

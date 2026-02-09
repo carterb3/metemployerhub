@@ -42,20 +42,15 @@ import {
   X 
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { REGION_LABELS } from "@/lib/regions";
 
 type ManitobaRegion = Database["public"]["Enums"]["manitoba_region"];
 type ContactPreference = Database["public"]["Enums"]["contact_preference"];
 
-const regionOptions: { value: ManitobaRegion; label: string }[] = [
-  { value: "interlake", label: "Interlake" },
-  { value: "northwest", label: "Northwest" },
-  { value: "southeast", label: "Southeast" },
-  { value: "southwest", label: "Southwest" },
-  { value: "winnipeg", label: "Winnipeg" },
-  { value: "the_pas", label: "The Pas" },
-  { value: "thompson", label: "Thompson" },
-  { value: "beyond_borders", label: "Beyond Borders" },
-];
+const regionOptions = Object.entries(REGION_LABELS).map(([value, label]) => ({
+  value: value as ManitobaRegion,
+  label,
+}));
 
 const contactPreferenceOptions: { value: ContactPreference; label: string }[] = [
   { value: "email", label: "Email" },
