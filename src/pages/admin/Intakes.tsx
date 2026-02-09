@@ -25,6 +25,7 @@ import { Search, Download, AlertTriangle, Loader2 } from "lucide-react";
 import { Link } from "react-router-dom";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
+import { formatRegion } from "@/lib/regions";
 import type { Database } from "@/integrations/supabase/types";
 
 type IntakeStatus = Database["public"]["Enums"]["intake_status"];
@@ -77,7 +78,7 @@ export default function IntakesPage() {
       intake.full_name,
       intake.email,
       intake.phone || "",
-      intake.region,
+      intake.region ? formatRegion(intake.region) : "",
       intake.city || "",
       intake.status,
       format(new Date(intake.created_at), "yyyy-MM-dd"),
@@ -182,7 +183,7 @@ export default function IntakesPage() {
                   <SelectItem value="all">All Regions</SelectItem>
                   {Constants.public.Enums.manitoba_region.map((region) => (
                     <SelectItem key={region} value={region}>
-                      {region}
+                      {formatRegion(region)}
                     </SelectItem>
                   ))}
                 </SelectContent>
@@ -234,7 +235,7 @@ export default function IntakesPage() {
                           </div>
                         </div>
                       </TableCell>
-                      <TableCell>{intake.region}</TableCell>
+                      <TableCell>{formatRegion(intake.region)}</TableCell>
                       <TableCell>
                         <Select
                           value={intake.status}
