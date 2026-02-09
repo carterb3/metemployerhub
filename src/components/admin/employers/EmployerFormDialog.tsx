@@ -29,6 +29,13 @@ import {
 } from "@/components/ui/select";
 import { useCreateEmployer, useUpdateEmployer, type Employer } from "@/hooks/useEmployerCRM";
 
+const businessTypeOptions = [
+  { value: "private", label: "Private" },
+  { value: "non_profit", label: "Non-Profit" },
+  { value: "metis_owned", label: "Red River Métis-owned Business" },
+  { value: "public_government", label: "Public / Government Services / Crown Corporations" },
+];
+
 const formSchema = z.object({
   company_name: z.string().min(1, "Company name is required"),
   contact_name: z.string().min(1, "Contact name is required"),
@@ -36,6 +43,7 @@ const formSchema = z.object({
   contact_phone: z.string().optional(),
   website: z.string().url().optional().or(z.literal("")),
   industry: z.string().optional(),
+  business_type: z.string().optional(),
   notes: z.string().optional(),
   status: z.enum(["active", "inactive", "prospect"]),
   is_partner: z.boolean(),
@@ -63,6 +71,7 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
       contact_phone: "",
       website: "",
       industry: "",
+      business_type: "",
       notes: "",
       status: "prospect",
       is_partner: false,
@@ -78,6 +87,7 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
         contact_phone: employer.contact_phone || "",
         website: employer.website || "",
         industry: employer.industry || "",
+        business_type: (employer as any).business_type || "",
         notes: (employer as any).notes || "",
         status: ((employer as any).status || "active") as "active" | "inactive" | "prospect",
         is_partner: employer.is_partner || false,
@@ -90,6 +100,7 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
         contact_phone: "",
         website: "",
         industry: "",
+        business_type: "",
         notes: "",
         status: "prospect",
         is_partner: false,
@@ -106,6 +117,7 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
           website: values.website || null,
           contact_phone: values.contact_phone || null,
           industry: values.industry || null,
+          business_type: values.business_type || null,
         } as any);
       } else {
         await createEmployer.mutateAsync({
@@ -113,6 +125,7 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
           website: values.website || null,
           contact_phone: values.contact_phone || null,
           industry: values.industry || null,
+          business_type: values.business_type || null,
         } as any);
       }
       onOpenChange(false);
@@ -213,6 +226,31 @@ export function EmployerFormDialog({ open, onOpenChange, employer }: EmployerFor
                   <FormControl>
                     <Input placeholder="e.g. Construction, Healthcare" {...field} />
                   </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="business_type"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Type of Business</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select business type" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {businessTypeOptions.map((opt) => (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {opt.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                   <FormMessage />
                 </FormItem>
               )}

@@ -98,6 +98,7 @@ export type Database = {
           assigned_to: string | null
           attachment_filename: string | null
           attachment_url: string | null
+          business_type: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -122,6 +123,7 @@ export type Database = {
           assigned_to?: string | null
           attachment_filename?: string | null
           attachment_url?: string | null
+          business_type?: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -148,6 +150,7 @@ export type Database = {
           assigned_to?: string | null
           attachment_filename?: string | null
           attachment_url?: string | null
+          business_type?: string | null
           company_name?: string
           contact_email?: string
           contact_name?: string
@@ -182,6 +185,7 @@ export type Database = {
       }
       employers: {
         Row: {
+          business_type: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -198,6 +202,7 @@ export type Database = {
           website: string | null
         }
         Insert: {
+          business_type?: string | null
           company_name: string
           contact_email: string
           contact_name: string
@@ -214,6 +219,7 @@ export type Database = {
           website?: string | null
         }
         Update: {
+          business_type?: string | null
           company_name?: string
           contact_email?: string
           contact_name?: string
