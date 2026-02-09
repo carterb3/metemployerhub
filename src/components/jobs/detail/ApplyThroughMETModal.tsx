@@ -47,14 +47,14 @@ type ManitobaRegion = Database["public"]["Enums"]["manitoba_region"];
 type ContactPreference = Database["public"]["Enums"]["contact_preference"];
 
 const regionOptions: { value: ManitobaRegion; label: string }[] = [
-  { value: "winnipeg", label: "Winnipeg" },
-  { value: "southeast", label: "Southeast" },
   { value: "interlake", label: "Interlake" },
-  { value: "parklands", label: "Parklands" },
   { value: "northwest", label: "Northwest" },
+  { value: "southeast", label: "Southeast" },
+  { value: "southwest", label: "Southwest" },
+  { value: "winnipeg", label: "Winnipeg" },
   { value: "the_pas", label: "The Pas" },
   { value: "thompson", label: "Thompson" },
-  { value: "swan_river", label: "Swan River" },
+  { value: "beyond_borders", label: "Beyond Borders" },
 ];
 
 const contactPreferenceOptions: { value: ContactPreference; label: string }[] = [
@@ -93,7 +93,8 @@ const applyFormSchema = z.object({
     .or(z.literal("")),
   region: z.enum([
     "winnipeg", "southeast", "interlake", "parklands", 
-    "northwest", "the_pas", "thompson", "swan_river"
+    "northwest", "the_pas", "thompson", "swan_river",
+    "southwest", "beyond_borders"
   ] as const, {
     required_error: "Please select your region",
   }),

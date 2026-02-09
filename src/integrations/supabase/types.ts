@@ -797,6 +797,8 @@ export type Database = {
         | "the_pas"
         | "thompson"
         | "swan_river"
+        | "southwest"
+        | "beyond_borders"
       pay_period: "hour" | "day" | "week" | "month" | "year" | "project"
     }
     CompositeTypes: {
@@ -998,6 +1000,8 @@ export const Constants = {
         "the_pas",
         "thompson",
         "swan_river",
+        "southwest",
+        "beyond_borders",
       ],
       pay_period: ["hour", "day", "week", "month", "year", "project"],
     },

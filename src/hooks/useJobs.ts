@@ -19,13 +19,15 @@ export type JobFilters = {
 
 // Map database enum values to display labels
 export const regionLabels: Record<string, string> = {
-  winnipeg: "Winnipeg",
-  southeast: "Southeast",
   interlake: "Interlake",
-  parklands: "Parklands",
   northwest: "Northwest",
+  southeast: "Southeast",
+  southwest: "Southwest",
+  winnipeg: "Winnipeg",
   the_pas: "The Pas",
   thompson: "Thompson",
+  beyond_borders: "Beyond Borders",
+  parklands: "Parklands",
   swan_river: "Swan River",
 };
 
