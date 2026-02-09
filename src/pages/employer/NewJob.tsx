@@ -51,13 +51,15 @@ const employmentTypeLabels: Record<EmploymentType, string> = {
 };
 
 const regionLabels: Record<Region, string> = {
-  winnipeg: "Winnipeg",
-  southeast: "Southeast",
   interlake: "Interlake",
-  parklands: "Parklands",
   northwest: "Northwest",
+  southeast: "Southeast",
+  southwest: "Southwest",
+  winnipeg: "Winnipeg",
   the_pas: "The Pas",
   thompson: "Thompson",
+  beyond_borders: "Beyond Borders",
+  parklands: "Parklands",
   swan_river: "Swan River",
 };
 

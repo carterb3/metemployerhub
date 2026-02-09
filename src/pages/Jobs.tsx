@@ -50,14 +50,14 @@ const JOBS_PER_PAGE = 12;
 // Filter options from database enums
 const regions = [
   { value: "all", label: "All Regions" },
-  { value: "winnipeg", label: "Winnipeg" },
-  { value: "southeast", label: "Southeast" },
   { value: "interlake", label: "Interlake" },
-  { value: "parklands", label: "Parklands" },
   { value: "northwest", label: "Northwest" },
+  { value: "southeast", label: "Southeast" },
+  { value: "southwest", label: "Southwest" },
+  { value: "winnipeg", label: "Winnipeg" },
   { value: "the_pas", label: "The Pas" },
   { value: "thompson", label: "Thompson" },
-  { value: "swan_river", label: "Swan River" },
+  { value: "beyond_borders", label: "Beyond Borders" },
 ];
 
 const categories = [
