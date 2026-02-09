@@ -798,12 +798,10 @@ export type Database = {
         | "winnipeg"
         | "southeast"
         | "interlake"
-        | "parklands"
+        | "southwest"
         | "northwest"
         | "the_pas"
         | "thompson"
-        | "swan_river"
-        | "southwest"
         | "beyond_borders"
       pay_period: "hour" | "day" | "week" | "month" | "year" | "project"
     }
@@ -1001,12 +999,10 @@ export const Constants = {
         "winnipeg",
         "southeast",
         "interlake",
-        "parklands",
+        "southwest",
         "northwest",
         "the_pas",
         "thompson",
-        "swan_river",
-        "southwest",
         "beyond_borders",
       ],
       pay_period: ["hour", "day", "week", "month", "year", "project"],

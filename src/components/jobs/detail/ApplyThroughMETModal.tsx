@@ -92,8 +92,8 @@ const applyFormSchema = z.object({
     .optional()
     .or(z.literal("")),
   region: z.enum([
-    "winnipeg", "southeast", "interlake", "parklands", 
-    "northwest", "the_pas", "thompson", "swan_river",
+    "winnipeg", "southeast", "interlake",
+    "northwest", "the_pas", "thompson",
     "southwest", "beyond_borders"
   ] as const, {
     required_error: "Please select your region",
@@ -239,7 +239,7 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
 
       const { error } = await supabase
         .from("job_seeker_intakes")
-        .insert({
+        .insert([{
           full_name: data.full_name,
           email: data.email,
           phone: data.phone || null,
@@ -252,10 +252,10 @@ export function ApplyThroughMETModal({ jobTitle, jobId, trigger }: ApplyThroughM
           consent_data_collection: data.consent_data_collection,
           consent_contact: data.consent_contact,
           interests: [jobId],
-          status: "new",
+          status: "new" as const,
           resume_url: resumeData?.url || null,
           resume_filename: resumeData?.filename || null,
-        });
+        }]);
 
       if (error) throw error;
 

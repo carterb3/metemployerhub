@@ -6,12 +6,10 @@ export const REGION_LABELS: Record<Region, string> = {
   winnipeg: "Winnipeg",
   southeast: "Southeast",
   interlake: "Interlake",
-  parklands: "Parklands",
+  southwest: "Southwest",
   northwest: "Northwest",
   the_pas: "The Pas",
   thompson: "Thompson",
-  swan_river: "Swan River",
-  southwest: "Southwest",
   beyond_borders: "Beyond Borders",
 };
 
