@@ -79,6 +79,7 @@ export default function EmployersPage() {
     email: "",
     phone: "",
     inquiryType: "",
+    businessType: "",
     message: "",
   });
   const [file, setFile] = useState<File | null>(null);
@@ -183,6 +184,7 @@ export default function EmployersPage() {
           contact_email: formData.email,
           contact_phone: formData.phone,
           inquiry_type: inquiryTypeMap[formData.inquiryType] || "general",
+          business_type: formData.businessType || null,
           message: formData.message || "No additional message provided.",
           attachment_url: attachmentUrl,
           attachment_filename: attachmentFilename,
@@ -202,6 +204,7 @@ export default function EmployersPage() {
         email: "",
         phone: "",
         inquiryType: "",
+        businessType: "",
         message: "",
       });
       setFile(null);
@@ -437,6 +440,31 @@ export default function EmployersPage() {
                       <SelectItem value="other">Other inquiry</SelectItem>
                     </SelectContent>
                   </Select>
+                </div>
+
+                {/* Type of Business */}
+                <div>
+                  <Label>Type of Business *</Label>
+                  <div className="mt-2 space-y-2">
+                    {[
+                      { value: "private", label: "Private" },
+                      { value: "non_profit", label: "Non-Profit" },
+                      { value: "metis_owned", label: "Red River Métis-owned Business" },
+                      { value: "public_government", label: "Public / Government Services / Crown Corporations" },
+                    ].map((option) => (
+                      <label key={option.value} className="flex items-center gap-3 cursor-pointer">
+                        <input
+                          type="radio"
+                          name="businessType"
+                          value={option.value}
+                          checked={formData.businessType === option.value}
+                          onChange={(e) => setFormData((prev) => ({ ...prev, businessType: e.target.value }))}
+                          className="h-4 w-4 text-primary border-border focus:ring-primary"
+                        />
+                        <span className="text-sm text-foreground">{option.label}</span>
+                      </label>
+                    ))}
+                  </div>
                 </div>
 
                 {/* File Upload */}
