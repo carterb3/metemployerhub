@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { REGION_LABELS } from "@/lib/regions";
 import { useNavigate, Link } from "react-router-dom";
 import { ArrowLeft, Loader2 } from "lucide-react";
 import { EmployerLayout } from "@/components/employer/EmployerLayout";
@@ -50,16 +51,7 @@ const employmentTypeLabels: Record<EmploymentType, string> = {
   remote: "Remote",
 };
 
-const regionLabels: Record<Region, string> = {
-  interlake: "Interlake",
-  northwest: "Northwest",
-  southeast: "Southeast",
-  southwest: "Southwest",
-  winnipeg: "Winnipeg",
-  the_pas: "The Pas",
-  thompson: "Thompson",
-  beyond_borders: "Beyond Borders",
-};
+const regionLabels = REGION_LABELS;
 
 const locationTypeLabels: Record<LocationType, string> = {
   onsite: "On-site",

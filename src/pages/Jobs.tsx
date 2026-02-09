@@ -43,6 +43,7 @@ import {
   employmentTypeLabels,
   Job
 } from "@/hooks/useJobs";
+import { formatRegion } from "@/lib/regions";
 import { MMFJobWidget } from "@/components/jobs/MMFJobWidget";
 
 const JOBS_PER_PAGE = 12;
@@ -50,14 +51,7 @@ const JOBS_PER_PAGE = 12;
 // Filter options from database enums
 const regions = [
   { value: "all", label: "All Regions" },
-  { value: "interlake", label: "Interlake" },
-  { value: "northwest", label: "Northwest" },
-  { value: "southeast", label: "Southeast" },
-  { value: "southwest", label: "Southwest" },
-  { value: "winnipeg", label: "Winnipeg" },
-  { value: "the_pas", label: "The Pas" },
-  { value: "thompson", label: "Thompson" },
-  { value: "beyond_borders", label: "Beyond Borders" },
+  ...Object.entries(regionLabels).map(([value, label]) => ({ value, label })),
 ];
 
 const categories = [
