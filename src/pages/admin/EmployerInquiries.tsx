@@ -353,7 +353,7 @@ export default function EmployerInquiriesPage() {
           open={!!selectedInquiry}
           onOpenChange={() => setSelectedInquiry(null)}
         >
-          <DialogContent className="max-w-2xl">
+          <DialogContent className="max-w-2xl max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{selectedInquiry?.company_name}</DialogTitle>
               <DialogDescription>
