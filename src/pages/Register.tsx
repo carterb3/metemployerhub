@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef } from "react";
 import { Link } from "react-router-dom";
 import {
   User,
@@ -10,6 +10,9 @@ import {
   ArrowLeft,
   Upload,
   HelpCircle,
+  Loader2,
+  FileText,
+  X,
 } from "lucide-react";
 import { Layout } from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -30,6 +33,37 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
+import type { Database } from "@/integrations/supabase/types";
+
+type ManitobaRegion = Database["public"]["Enums"]["manitoba_region"];
+
+const regionToEnum: Record<string, ManitobaRegion> = {
+  "Winnipeg": "winnipeg",
+  "Southwest (Brandon area)": "southwest",
+  "Southeast": "southeast",
+  "Interlake": "interlake",
+  "Northwest (Dauphin area)": "northwest",
+  "The Pas & Northern": "the_pas",
+};
+
+const contactMethodToPreference = (methods: string[]): Database["public"]["Enums"]["contact_preference"] => {
+  if (methods.length === 0 || methods.length >= 3) return "any";
+  if (methods.includes("Email") && methods.length === 1) return "email";
+  if (methods.includes("Phone call") && methods.length === 1) return "phone";
+  if (methods.includes("Text message") && methods.length === 1) return "text";
+  return "any";
+};
+
+// Allowed file types for resume
+const ALLOWED_FILE_TYPES = [
+  "application/pdf",
+  "application/msword",
+  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
+];
+const ALLOWED_EXTENSIONS = [".pdf", ".doc", ".docx"];
+const MAX_FILE_SIZE = 10 * 1024 * 1024; // 10MB
 
 const steps = [
   { id: 1, name: "Contact Info", icon: User },
@@ -100,6 +134,9 @@ export default function RegisterPage() {
     consent: false,
   });
   const [isSubmitted, setIsSubmitted] = useState(false);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [resumeError, setResumeError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   const updateField = (field: string, value: any) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
@@ -115,6 +152,39 @@ export default function RegisterPage() {
     });
   };
 
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    setResumeError(null);
+    if (!file) {
+      updateField("resume", null);
+      return;
+    }
+    const extension = file.name.toLowerCase().substring(file.name.lastIndexOf('.'));
+    if (!ALLOWED_EXTENSIONS.includes(extension) && !ALLOWED_FILE_TYPES.includes(file.type)) {
+      setResumeError("Please upload a PDF or Word document (.pdf, .doc, .docx)");
+      updateField("resume", null);
+      return;
+    }
+    if (file.size > MAX_FILE_SIZE) {
+      setResumeError("File size must be less than 10MB");
+      updateField("resume", null);
+      return;
+    }
+    updateField("resume", file);
+  };
+
+  const removeFile = () => {
+    updateField("resume", null);
+    setResumeError(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const formatFileSize = (bytes: number) => {
+    if (bytes < 1024) return `${bytes} B`;
+    if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
+    return `${(bytes / (1024 * 1024)).toFixed(1)} MB`;
+  };
+
   const handleNext = () => {
     if (currentStep < 4) setCurrentStep(currentStep + 1);
   };
@@ -123,9 +193,95 @@ export default function RegisterPage() {
     if (currentStep > 1) setCurrentStep(currentStep - 1);
   };
 
-  const handleSubmit = () => {
-    // In a real app, this would submit to the backend
-    setIsSubmitted(true);
+  const handleSubmit = async () => {
+    // Validate required fields
+    if (!formData.firstName.trim() || !formData.lastName.trim()) {
+      toast.error("Please enter your first and last name.");
+      return;
+    }
+    if (!formData.email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      toast.error("Please enter a valid email address.");
+      return;
+    }
+    if (!formData.region) {
+      toast.error("Please select your region.");
+      return;
+    }
+    if (!formData.consent) {
+      toast.error("You must consent to data collection.");
+      return;
+    }
+
+    setIsSubmitting(true);
+
+    try {
+      let resumeUrl: string | null = null;
+      let resumeFilename: string | null = null;
+
+      // Upload resume if provided
+      if (formData.resume) {
+        const timestamp = Date.now();
+        const sanitizedName = formData.resume.name.replace(/[^a-zA-Z0-9.-]/g, '_');
+        const filePath = `registrations/${timestamp}-${sanitizedName}`;
+
+        const { data: uploadData, error: uploadError } = await supabase.storage
+          .from('resumes')
+          .upload(filePath, formData.resume, {
+            cacheControl: '3600',
+            upsert: false,
+          });
+
+        if (uploadError) {
+          console.error("Resume upload error:", uploadError);
+          toast.error("Failed to upload resume. Please try again.");
+          setIsSubmitting(false);
+          return;
+        }
+
+        resumeUrl = uploadData.path;
+        resumeFilename = formData.resume.name;
+      }
+
+      const regionEnum = regionToEnum[formData.region];
+      if (!regionEnum) {
+        toast.error("Invalid region selected.");
+        setIsSubmitting(false);
+        return;
+      }
+
+      const { error } = await supabase
+        .from("job_seeker_intakes")
+        .insert({
+          full_name: `${formData.firstName.trim()} ${formData.lastName.trim()}`,
+          email: formData.email.trim(),
+          phone: formData.phone.trim() || null,
+          postal_code: formData.postalCode.trim() || null,
+          city: formData.city.trim() || null,
+          region: regionEnum,
+          contact_preference: contactMethodToPreference(formData.preferredContact),
+          employment_status: formData.employmentStatus || null,
+          employment_goals: formData.employmentGoals.join(", ") || null,
+          skills: formData.skills.length > 0 ? formData.skills : null,
+          skills_other: formData.otherSkills.trim() || null,
+          barriers_description: formData.supportNeeds.trim() || null,
+          has_barriers: formData.supportNeeds.trim().length > 0,
+          consent_data_collection: formData.consent,
+          consent_contact: formData.consent,
+          status: "new",
+          resume_url: resumeUrl,
+          resume_filename: resumeFilename,
+        });
+
+      if (error) throw error;
+
+      setIsSubmitted(true);
+      toast.success("Registration submitted successfully!");
+    } catch (error) {
+      console.error("Registration submission error:", error);
+      toast.error("Failed to submit registration. Please try again.");
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   if (isSubmitted) {
@@ -497,26 +653,61 @@ export default function RegisterPage() {
                         </TooltipTrigger>
                         <TooltipContent>
                           <p className="max-w-xs">
-                            PDF, DOC, or image files accepted. You can also bring
+                            PDF or Word documents accepted (max 10MB). You can also bring
                             this to your meeting.
                           </p>
                         </TooltipContent>
                       </Tooltip>
                     </Label>
-                    <div className="mt-1.5 border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-primary/50 transition-colors">
-                      <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                      <p className="text-sm text-muted-foreground">
-                        Drag and drop or click to upload
-                      </p>
-                      <input
-                        type="file"
-                        className="absolute inset-0 opacity-0 cursor-pointer"
-                        accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
-                        onChange={(e) =>
-                          updateField("resume", e.target.files?.[0] || null)
-                        }
-                      />
-                    </div>
+                    
+                    {!formData.resume ? (
+                      <div 
+                        className={`mt-1.5 border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary/50 transition-colors relative ${resumeError ? 'border-destructive' : 'border-border'}`}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
+                        <p className="text-sm text-muted-foreground">
+                          Click to upload your resume
+                        </p>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          PDF or Word document, max 10MB
+                        </p>
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          className="hidden"
+                          accept=".pdf,.doc,.docx,application/pdf,application/msword,application/vnd.openxmlformats-officedocument.wordprocessingml.document"
+                          onChange={handleFileSelect}
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-1.5 flex items-center gap-3 p-3 rounded-lg bg-muted/50 border border-border">
+                        <div className="p-2 bg-primary/10 rounded-lg">
+                          <FileText className="h-5 w-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-foreground truncate">
+                            {formData.resume.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {formatFileSize(formData.resume.size)}
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="h-8 w-8 text-muted-foreground hover:text-destructive"
+                          onClick={removeFile}
+                        >
+                          <X className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    )}
+                    
+                    {resumeError && (
+                      <p className="text-sm text-destructive mt-1">{resumeError}</p>
+                    )}
                   </div>
 
                   <div>
@@ -647,10 +838,19 @@ export default function RegisterPage() {
                 <Button
                   variant="accent"
                   onClick={handleSubmit}
-                  disabled={!formData.consent}
+                  disabled={!formData.consent || isSubmitting}
                 >
-                  Submit Registration
-                  <ArrowRight className="ml-2 h-4 w-4" />
+                  {isSubmitting ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Submitting...
+                    </>
+                  ) : (
+                    <>
+                      Submit Registration
+                      <ArrowRight className="ml-2 h-4 w-4" />
+                    </>
+                  )}
                 </Button>
               )}
             </div>

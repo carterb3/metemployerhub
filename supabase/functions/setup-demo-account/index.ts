@@ -3,7 +3,7 @@ import { createClient } from "npm:@supabase/supabase-js@2";
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
+    "authorization, x-client-info, apikey, content-type, x-supabase-client-platform, x-supabase-client-platform-version, x-supabase-client-runtime, x-supabase-client-runtime-version",
 };
 
 Deno.serve(async (req: Request) => {
@@ -14,15 +14,54 @@ Deno.serve(async (req: Request) => {
   try {
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
+    const supabaseAnonKey = Deno.env.get("SUPABASE_ANON_KEY")!;
 
+    // --- Authentication: require valid JWT ---
+    const authHeader = req.headers.get("Authorization");
+    if (!authHeader?.startsWith("Bearer ")) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userClient = createClient(supabaseUrl, supabaseAnonKey, {
+      global: { headers: { Authorization: authHeader } },
+      auth: { persistSession: false },
+    });
+
+    const token = authHeader.replace("Bearer ", "");
+    const { data: claimsData, error: claimsError } = await userClient.auth.getClaims(token);
+    if (claimsError || !claimsData?.claims) {
+      return new Response(
+        JSON.stringify({ error: "Unauthorized" }),
+        { status: 401, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    const userId = claimsData.claims.sub as string;
+
+    // --- Authorization: require admin role ---
     const adminClient = createClient(supabaseUrl, supabaseServiceKey, {
       auth: { persistSession: false },
     });
 
+    const { data: isAdmin } = await adminClient.rpc("has_role", {
+      _user_id: userId,
+      _role: "admin",
+    });
+
+    if (!isAdmin) {
+      return new Response(
+        JSON.stringify({ error: "Admin access required" }),
+        { status: 403, headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
+    }
+
+    // --- Process request (admin-only from here) ---
     const { action, email, password } = await req.json();
 
     if (action === "create_demo_employer") {
-      // Create or update demo employer account
       const demoEmail = email || "demo@employer.test";
       const demoPassword = password || "Demo123!";
 
@@ -33,10 +72,9 @@ Deno.serve(async (req: Request) => {
         .eq("email", demoEmail.toLowerCase())
         .single();
 
-      let userId: string;
+      let targetUserId: string;
 
       if (existingProfile?.user_id) {
-        // Update password for existing user
         const { error: updateError } = await adminClient.auth.admin.updateUserById(
           existingProfile.user_id,
           { password: demoPassword }
@@ -49,10 +87,8 @@ Deno.serve(async (req: Request) => {
           );
         }
         
-        userId = existingProfile.user_id;
-        console.log("Updated password for existing user:", userId);
+        targetUserId = existingProfile.user_id;
       } else {
-        // Create new user
         const { data: newUser, error: createError } = await adminClient.auth.admin.createUser({
           email: demoEmail,
           password: demoPassword,
@@ -67,23 +103,21 @@ Deno.serve(async (req: Request) => {
           );
         }
 
-        userId = newUser.user.id;
-        console.log("Created new demo user:", userId);
+        targetUserId = newUser.user.id;
       }
 
       // Check if employer record exists for this user
       const { data: existingEmployer } = await adminClient
         .from("employers")
         .select("id")
-        .eq("user_id", userId)
+        .eq("user_id", targetUserId)
         .single();
 
       if (!existingEmployer) {
-        // Create employer record
-        const { error: employerError } = await adminClient
+        await adminClient
           .from("employers")
           .insert({
-            user_id: userId,
+            user_id: targetUserId,
             company_name: "Demo Employer Inc.",
             contact_name: "Demo User",
             contact_email: demoEmail,
@@ -91,30 +125,25 @@ Deno.serve(async (req: Request) => {
             is_partner: true,
             industry: "Technology",
           });
-
-        if (employerError) {
-          console.error("Failed to create employer record:", employerError);
-        }
       }
 
       // Ensure employer role
       await adminClient.from("user_roles").upsert(
-        { user_id: userId, role: "employer" },
+        { user_id: targetUserId, role: "employer" },
         { onConflict: "user_id,role", ignoreDuplicates: true }
       );
 
       return new Response(
         JSON.stringify({ 
           success: true, 
-          message: `Demo employer account ready: ${demoEmail} / ${demoPassword}`,
-          userId 
+          message: `Demo employer account ready for ${demoEmail}`,
+          userId: targetUserId,
         }),
         { status: 200, headers: { ...corsHeaders, "Content-Type": "application/json" } }
       );
     }
 
     if (action === "set_password") {
-      // Set password for existing user
       if (!email || !password) {
         return new Response(
           JSON.stringify({ error: "Email and password required" }),
