@@ -6,6 +6,7 @@ import {
   useAssignInquiry,
 } from "@/hooks/useEmployerInquiries";
 import { useStaffMembers } from "@/hooks/useIntakes";
+import { useConvertInquiryToEmployer } from "@/hooks/useEmployerCRM";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import {
@@ -38,7 +39,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { Search, Download, Loader2, ExternalLink, Paperclip } from "lucide-react";
+import { Search, Download, Loader2, ExternalLink, Paperclip, Building2, XCircle } from "lucide-react";
 import { format } from "date-fns";
 import { Constants } from "@/integrations/supabase/types";
 import type { Database } from "@/integrations/supabase/types";
@@ -79,6 +80,7 @@ export default function EmployerInquiriesPage() {
   const { data: staffMembers = [] } = useStaffMembers();
   const updateStatus = useUpdateInquiryStatus();
   const assignInquiry = useAssignInquiry();
+  const convertMutation = useConvertInquiryToEmployer();
 
   const handleExportCSV = () => {
     const headers = [
@@ -445,6 +447,49 @@ export default function EmployerInquiriesPage() {
                       attachmentUrl={selectedInquiry.attachment_url}
                       attachmentFilename={selectedInquiry.attachment_filename || null}
                     />
+                  </div>
+                )}
+
+                {/* Action Buttons */}
+                {selectedInquiry.status !== "closed" && !selectedInquiry.converted_to_employer_id && (
+                  <div className="flex justify-end gap-2 pt-4 border-t">
+                    <Button
+                      variant="destructive"
+                      size="sm"
+                      onClick={() => {
+                        updateStatus.mutate(
+                          { id: selectedInquiry.id, status: "closed" },
+                          { onSuccess: () => setSelectedInquiry(null) }
+                        );
+                      }}
+                      disabled={updateStatus.isPending}
+                    >
+                      <XCircle className="mr-2 h-4 w-4" />
+                      Reject
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={async () => {
+                        try {
+                          await convertMutation.mutateAsync(selectedInquiry as any);
+                          setSelectedInquiry(null);
+                        } catch {
+                          // Error handled in hook
+                        }
+                      }}
+                      disabled={convertMutation.isPending}
+                    >
+                      <Building2 className="mr-2 h-4 w-4" />
+                      {convertMutation.isPending ? "Converting..." : "Convert to Employer"}
+                    </Button>
+                  </div>
+                )}
+
+                {selectedInquiry.converted_to_employer_id && (
+                  <div className="pt-4 border-t">
+                    <Badge className="bg-success/10 text-success border-success/20">
+                      Already converted to employer
+                    </Badge>
                   </div>
                 )}
               </div>
