@@ -59,8 +59,6 @@ const regionLabels: Record<Region, string> = {
   the_pas: "The Pas",
   thompson: "Thompson",
   beyond_borders: "Beyond Borders",
-  parklands: "Parklands",
-  swan_river: "Swan River",
 };
 
 const locationTypeLabels: Record<LocationType, string> = {

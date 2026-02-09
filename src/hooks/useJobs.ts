@@ -27,8 +27,6 @@ export const regionLabels: Record<string, string> = {
   the_pas: "The Pas",
   thompson: "Thompson",
   beyond_borders: "Beyond Borders",
-  parklands: "Parklands",
-  swan_river: "Swan River",
 };
 
 export const categoryLabels: Record<string, string> = {
