@@ -221,6 +221,28 @@ export function useConvertInquiryToEmployer() {
   });
 }
 
+export function useDeleteEmployer() {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (id: string) => {
+      const { error } = await supabase
+        .from("employers")
+        .delete()
+        .eq("id", id);
+
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["employers"] });
+      toast.success("Employer deleted successfully");
+    },
+    onError: (error) => {
+      toast.error(`Failed to delete employer: ${error.message}`);
+    },
+  });
+}
+
 export function useUnconvertedInquiries() {
   return useQuery({
     queryKey: ["unconverted-inquiries"],

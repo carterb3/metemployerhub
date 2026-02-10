@@ -11,7 +11,9 @@ import {
   ArrowUpRight,
   Users,
   Handshake,
-  Clock
+  Clock,
+  Edit,
+  Trash2,
 } from "lucide-react";
 import { AdminLayout } from "@/components/admin/AdminLayout";
 import { Button } from "@/components/ui/button";
@@ -34,9 +36,20 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { 
   useEmployers, 
   useUnconvertedInquiries,
+  useDeleteEmployer,
   employerStatusLabels,
   type Employer 
 } from "@/hooks/useEmployerCRM";
@@ -49,9 +62,12 @@ export default function EmployerCRM() {
   const [statusFilter, setStatusFilter] = useState<string>("all");
   const [showNewDialog, setShowNewDialog] = useState(false);
   const [showConvertDialog, setShowConvertDialog] = useState(false);
+  const [editingEmployer, setEditingEmployer] = useState<Employer | null>(null);
+  const [deletingEmployer, setDeletingEmployer] = useState<Employer | null>(null);
 
   const { data: employers, isLoading: loadingEmployers } = useEmployers();
   const { data: unconvertedInquiries } = useUnconvertedInquiries();
+  const deleteEmployer = useDeleteEmployer();
 
   // Filter employers
   const filteredEmployers = employers?.filter((employer) => {
@@ -254,7 +270,7 @@ export default function EmployerCRM() {
                         {format(new Date(employer.created_at), "MMM d, yyyy")}
                       </TableCell>
                       <TableCell className="text-right">
-                        <div className="flex items-center justify-end gap-2">
+                        <div className="flex items-center justify-end gap-1">
                           {employer.website && (
                             <Button variant="ghost" size="icon" asChild>
                               <a href={employer.website} target="_blank" rel="noopener noreferrer">
@@ -262,6 +278,12 @@ export default function EmployerCRM() {
                               </a>
                             </Button>
                           )}
+                          <Button variant="ghost" size="icon" onClick={() => setEditingEmployer(employer)}>
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button variant="ghost" size="icon" onClick={() => setDeletingEmployer(employer)}>
+                            <Trash2 className="h-4 w-4 text-destructive" />
+                          </Button>
                           <Button variant="ghost" size="sm" asChild>
                             <Link to={`/admin/employers/${employer.id}`}>
                               <MessageSquare className="mr-2 h-4 w-4" />
@@ -281,14 +303,46 @@ export default function EmployerCRM() {
 
       {/* Dialogs */}
       <EmployerFormDialog 
-        open={showNewDialog} 
-        onOpenChange={setShowNewDialog} 
+        open={showNewDialog || !!editingEmployer} 
+        onOpenChange={(open) => {
+          if (!open) {
+            setShowNewDialog(false);
+            setEditingEmployer(null);
+          }
+        }}
+        employer={editingEmployer}
       />
       <ConvertInquiryDialog
         open={showConvertDialog}
         onOpenChange={setShowConvertDialog}
         inquiries={unconvertedInquiries || []}
       />
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deletingEmployer} onOpenChange={(open) => !open && setDeletingEmployer(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Employer</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete <strong>{deletingEmployer?.company_name}</strong>? This action cannot be undone and will remove all associated data.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              onClick={() => {
+                if (deletingEmployer) {
+                  deleteEmployer.mutate(deletingEmployer.id);
+                  setDeletingEmployer(null);
+                }
+              }}
+            >
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </AdminLayout>
   );
 }
