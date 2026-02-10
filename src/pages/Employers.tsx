@@ -38,9 +38,9 @@ const benefits = [
   },
   {
     icon: FileText,
-    title: "Free Job Posting",
+    title: "Job Posting Support",
     description:
-      "List your openings at no cost and reach job seekers actively looking for work.",
+      "List your openings and reach job seekers actively looking for work.",
   },
   {
     icon: CheckCircle2,
@@ -239,7 +239,7 @@ export default function EmployersPage() {
               Partner with MET to Build Your Team
             </h1>
             <p className="text-lg sm:text-xl text-primary-foreground/85 mb-8">
-              Connect with skilled Red River Métis job seekers and access free recruitment
+              Connect with skilled Red River Métis job seekers and access recruitment
               support, training subsidies, and more.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
@@ -265,7 +265,7 @@ export default function EmployersPage() {
               Why Partner with MET?
             </h2>
             <p className="text-muted-foreground max-w-2xl mx-auto">
-              We offer comprehensive recruitment support at no cost to Manitoba
+              We offer comprehensive recruitment support to Manitoba
               employers.
             </p>
           </div>
