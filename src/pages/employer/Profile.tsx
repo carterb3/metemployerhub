@@ -93,8 +93,8 @@ export default function EmployerProfile() {
           <CardContent className="p-4">
             <p className="text-sm text-muted-foreground">
               Need to update your company information? Contact MET at{" "}
-              <a href="mailto:employment@mmf.mb.ca" className="text-primary hover:underline">
-                employment@mmf.mb.ca
+               <a href="mailto:metdigital@mmf.mb.ca" className="text-primary hover:underline">
+                metdigital@mmf.mb.ca
               </a>{" "}
               or call{" "}
               <a href="tel:204-586-8474" className="text-primary hover:underline">
