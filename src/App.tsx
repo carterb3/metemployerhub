@@ -26,6 +26,7 @@ import EmployerPending from "./pages/employer/Pending";
 import EmployerDashboard from "./pages/employer/Dashboard";
 import EmployerJobs from "./pages/employer/Jobs";
 import NewEmployerJob from "./pages/employer/NewJob";
+import EditEmployerJob from "./pages/employer/EditJob";
 import EmployerProfile from "./pages/employer/Profile";
 import EmployerHelp from "./pages/employer/Help";
 
@@ -54,6 +55,7 @@ const App = () => (
           <Route path="/employer/dashboard" element={<EmployerDashboard />} />
           <Route path="/employer/jobs" element={<EmployerJobs />} />
           <Route path="/employer/jobs/new" element={<NewEmployerJob />} />
+          <Route path="/employer/jobs/:id/edit" element={<EditEmployerJob />} />
           <Route path="/employer/profile" element={<EmployerProfile />} />
           <Route path="/employer/help" element={<EmployerHelp />} />
           
