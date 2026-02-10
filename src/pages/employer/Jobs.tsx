@@ -154,7 +154,7 @@ export default function EmployerJobs() {
                 <TableBody>
                   {filteredJobs.map((job) => {
                     const config = statusConfig[job.status];
-                    const canEdit = job.status === "draft" || job.status === "pending";
+                    const canEdit = job.status === "draft" || job.status === "pending" || job.status === "active";
                     return (
                       <TableRow key={job.id}>
                         <TableCell>

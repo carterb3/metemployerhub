@@ -189,7 +189,7 @@ export default function EditEmployerJob() {
     );
   }
 
-  const canEdit = job.status === "draft" || job.status === "pending";
+  const canEdit = job.status === "draft" || job.status === "pending" || job.status === "active";
   if (!canEdit) {
     return (
       <EmployerLayout>
