@@ -115,6 +115,7 @@ export type Database = {
           message: string
           positions_count: number | null
           region: Database["public"]["Enums"]["manitoba_region"] | null
+          rejection_reason: string | null
           status: Database["public"]["Enums"]["inquiry_status"]
           updated_at: string
           website: string | null
@@ -142,6 +143,7 @@ export type Database = {
           message: string
           positions_count?: number | null
           region?: Database["public"]["Enums"]["manitoba_region"] | null
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["inquiry_status"]
           updated_at?: string
           website?: string | null
@@ -169,6 +171,7 @@ export type Database = {
           message?: string
           positions_count?: number | null
           region?: Database["public"]["Enums"]["manitoba_region"] | null
+          rejection_reason?: string | null
           status?: Database["public"]["Enums"]["inquiry_status"]
           updated_at?: string
           website?: string | null

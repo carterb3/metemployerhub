@@ -55,13 +55,19 @@ export function useUpdateInquiryStatus() {
     mutationFn: async ({
       id,
       status,
+      rejection_reason,
     }: {
       id: string;
       status: InquiryStatus;
+      rejection_reason?: string;
     }) => {
+      const updates: Record<string, unknown> = { status };
+      if (rejection_reason !== undefined) {
+        updates.rejection_reason = rejection_reason;
+      }
       const { error } = await supabase
         .from("employer_inquiries")
-        .update({ status })
+        .update(updates)
         .eq("id", id);
 
       if (error) throw error;
