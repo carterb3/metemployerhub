@@ -16,7 +16,7 @@ import {
   SidebarHeader,
   useSidebar,
 } from "@/components/ui/sidebar";
-import logo from "@/assets/logo.png";
+import logo from "@/assets/met-white-logo.png";
 
 const navigation = [
   { title: "Dashboard", url: "/admin", icon: LayoutDashboard },
