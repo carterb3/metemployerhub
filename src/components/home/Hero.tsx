@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowRight, Search, GraduationCap, Users } from "lucide-react";
+import { ArrowRight, Search, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import heroPrairie from "@/assets/hero-prairie.jpg";
