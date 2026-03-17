@@ -100,12 +100,6 @@ export function Hero() {
                 Create Employer Profile
               </Link>
             </Button>
-            <Button variant="hero-outline" size="lg" asChild className="group">
-              <Link to="/programs">
-                <GraduationCap className="h-5 w-5 mr-2" />
-                Explore Training
-              </Link>
-            </Button>
           </div>
         </div>
       </div>
